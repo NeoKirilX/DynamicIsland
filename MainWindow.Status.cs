@@ -167,7 +167,7 @@ public partial class MainWindow
 
     void PollSystemStats()
     {
-        bool visible = Settings.SystemStats;
+        bool visible = Settings.SystemStats || _view == View.IdleBig;
         InfoCpuRow.SetVisible(visible);
         InfoRamRow.SetVisible(visible);
         if (!visible) return;

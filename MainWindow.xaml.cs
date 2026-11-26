@@ -468,8 +468,11 @@ public partial class MainWindow : Window
         parent == View.Menu && MenuPages.Contains(page) || parent == View.Settings && SettingsPages.Contains(page)
         || parent == View.Weather && WeatherPages.Contains(page);
 
+    bool HasIdleWeather => Settings.Weather && _weather.Now != null;
+
     PillShape ShapeOf(View view) => view switch
     {
+        View.Idle => PillShapes[view] with { Width = HasIdleWeather ? 172 : 118 },
         View.Media => PillShapes[view] with { Width = _compactMediaWidth },
         View.MediaBig when _playerHasLyricRoom => PillShapes[view] with { Height = PlayerHeight + PlayerLyricsHeight },
         View.RecordSet => PillShapes[view] with { Width = RecordSetView.Width },

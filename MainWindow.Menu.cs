@@ -23,11 +23,7 @@ public partial class MainWindow
     readonly Spring _lookScroll = new(0, 260, 30);
     readonly Spring _updateNotesScroll = new(0, 260, 30);
 
-    void SettingsRow_Click(object sender, RoutedEventArgs e)
-    {
-        _settingsScroll.Snap(0);
-        ShowPanelAndCheckUpdate(Panel.Settings);
-    }
+    void SettingsRow_Click(object sender, RoutedEventArgs e) => ShowPanelAndCheckUpdate(Panel.Settings);
 
     void UpdateRow_Click(object sender, RoutedEventArgs e) => ShowPanelAndCheckUpdate(Panel.Update);
 
@@ -530,10 +526,29 @@ public partial class MainWindow
         UpdateTargets();
     }
 
-    void ResetPos_Click(object sender, RoutedEventArgs e)
+    void Notch_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.Notch = NotchSegments.PickUnderPointer() == 1;
+        ApplyLook();
+    }
+
+    void PosXSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.PosX = (int)PosXSlider.Value;
+        PosXText.Text = Settings.PosX + " px";
+        ApplyLook();
+    }
+
+    void PosYSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.PosY = (int)PosYSlider.Value;
+        PosYText.Text = Settings.PosY + " px";
+        ApplyLook();
+    }
+
+    void CenterPos_Click(object sender, RoutedEventArgs e)
     {
         Settings.PosX = 0;
-        Settings.PosY = 0;
         ApplyLook();
     }
 
@@ -542,9 +557,14 @@ public partial class MainWindow
         SizeText.Text = Settings.Scale + "%";
         GapText.Text = Settings.Gap + " px";
         RadiusText.Text = Settings.Radius + " px";
+        PosXText.Text = Settings.PosX + " px";
+        PosYText.Text = Settings.PosY + " px";
         SizeSlider.Set(Settings.Scale, LookView.IsVisible);
         GapSlider.Set(Settings.Gap, LookView.IsVisible);
         RadiusSlider.Set(Settings.Radius, LookView.IsVisible);
+        PosXSlider.Set(Settings.PosX, LookView.IsVisible);
+        PosYSlider.Set(Settings.PosY, LookView.IsVisible);
+        NotchSegments.Set(Settings.Notch ? 1 : 0, LookView.IsVisible);
         DotsSegments.Set(Settings.Dots ? 1 : 0, LookView.IsVisible);
         SeekStyleSegments.Set(Settings.LineBar ? 1 : 0, LookView.IsVisible);
         SeekHoverSegments.Set((int)Settings.SeekHover, LookView.IsVisible);

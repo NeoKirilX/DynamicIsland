@@ -140,7 +140,7 @@ static class Settings
 
     // New properties ported from Roc edition
     static bool _shadow = ReadSwitch(nameof(Shadow), true);
-    static bool _systemStats = ReadSwitch(nameof(SystemStats), false);
+    static bool _systemStats = ReadSwitch(nameof(SystemStats), true);
     static bool _clickLock = ReadSwitch(nameof(ClickLock), true);
     static bool _capitalizeTitle = ReadSwitch(nameof(CapitalizeTitle), true);
     static bool _obs = ReadSwitch(nameof(Obs), true);

@@ -68,6 +68,7 @@ public partial class MainWindow
         if (dragging) TuneDragSprings(true);
         UpdateBubbleTargets(compact);
         UpdatePullHandleTargets();
+        _topGap.Target = Settings.Notch ? 0 : Settings.Gap;
         _offsetY.Target = (_hiddenByFullscreen || _sentAway) && !_ringing ? -(shape.Height + OffscreenMargin + Settings.Gap * 100.0 / Settings.Scale) : 0;
         _scale.Target = dragging ? 1 : _pressed ? (compact ? PressedScale : PressedOpenScale) : _hovered && compact ? HoverScale : 1;
         _bubbleScale.Target = _bubblePressed ? PressedScale : _bubbleHovered ? HoverScale : 1;
@@ -234,7 +235,7 @@ public partial class MainWindow
         double radius = Settings.Radius < 100 ? (r * Settings.Radius / 100.0) : r;
         Pill.Width = w;
         Pill.Height = h;
-        Pill.CornerRadius = new CornerRadius(radius);
+        Pill.CornerRadius = Settings.Notch ? new CornerRadius(0, 0, radius, radius) : new CornerRadius(radius);
         Canvas.SetLeft(BackdropBox, pill.Left);
         BackdropBox.Width = w;
         BackdropBox.Height = h;

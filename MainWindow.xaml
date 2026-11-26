@@ -508,8 +508,15 @@
             <Grid x:Name="Host">
 
                 <Grid x:Name="IdleView" Width="118" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <local:Digits x:Name="IdleClock" Text="00:00" FontSize="13.5" FontWeight="SemiBold"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <local:Digits x:Name="IdleClock" Text="00:00" FontSize="13.5" FontWeight="SemiBold"
+                                      VerticalAlignment="Center"/>
+                        <StackPanel x:Name="IdleWeatherBox" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="8,0,0,0">
+                            <Ellipse Width="3" Height="3" Fill="#4DFFFFFF" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <local:Icon x:Name="IdleWeatherIcon" Kind="Sun" Width="14" Height="14" Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
+                            <local:Digits x:Name="IdleWeatherText" Text="" FontSize="12.5" FontWeight="SemiBold" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
                 </Grid>
 
                 <Grid x:Name="MediaView" Width="210" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top">
@@ -762,10 +769,10 @@
                                         Margin="6,1,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                         </StackPanel>
                     </StackPanel>
-                    <Border Width="1" Height="64" Background="#16FFFFFF" HorizontalAlignment="Right"
+                    <Border Width="1" Height="80" Background="#16FFFFFF" HorizontalAlignment="Right"
                             Margin="0,0,104,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
                     <StackPanel Margin="0,0,24,0" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <StackPanel x:Name="InfoWeatherRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10"
+                        <StackPanel x:Name="InfoWeatherRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6"
                                     Visibility="Collapsed">
                             <local:Icon x:Name="InfoWeatherIcon" Kind="Sun" Width="16" Height="16"
                                         Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
@@ -778,28 +785,28 @@
                             <local:Digits x:Name="InfoVol" Text="—" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
                                           VerticalAlignment="Center"/>
                         </StackPanel>
-                        <StackPanel x:Name="InfoHeadsetRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
+                        <StackPanel x:Name="InfoHeadsetRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0"
                                     Visibility="Collapsed">
                             <local:Icon x:Name="InfoHeadsetIcon" Kind="Headphones" Width="16" Height="16"
                                         Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
                             <local:Digits x:Name="InfoHeadset" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
                                           VerticalAlignment="Center"/>
                         </StackPanel>
-                        <StackPanel x:Name="InfoBatRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
+                        <StackPanel x:Name="InfoBatRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0"
                                     Visibility="Collapsed">
                             <local:Icon x:Name="InfoBatIcon" Kind="Battery" Width="16" Height="16"
                                         Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
                             <local:Digits x:Name="InfoBat" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
                                           VerticalAlignment="Center"/>
                         </StackPanel>
-                        <StackPanel x:Name="InfoCpuRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
+                        <StackPanel x:Name="InfoCpuRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0"
                                     Visibility="Collapsed">
                             <local:Icon x:Name="InfoCpuIcon" Kind="Cpu" Width="16" Height="16"
                                         Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
                             <local:Digits x:Name="InfoCpu" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
                                           VerticalAlignment="Center"/>
                         </StackPanel>
-                        <StackPanel x:Name="InfoRamRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
+                        <StackPanel x:Name="InfoRamRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0"
                                     Visibility="Collapsed">
                             <local:Icon x:Name="InfoRamIcon" Kind="Ram" Width="16" Height="16"
                                         Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
@@ -1312,12 +1319,37 @@
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
-                                <Button Style="{StaticResource RowButton}" Click="ResetPos_Click">
+                                <Button Style="{StaticResource RowButton}" Click="Notch_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Look"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Форма островка"/>
+                                        <local:Segments x:Name="NotchSegments" Style="{StaticResource RowSegments}" Labels="Пилюля|Чёлка"/>
+                                    </Grid>
+                                </Button>
+                                <Button x:Name="PosXRow" Style="{StaticResource RowButton}">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Pointer"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Сброс позиции (Shift/Ctrl+Стрелки)"/>
-                                        <TextBlock Text="0, 0" FontSize="12" Foreground="{StaticResource Dim}"
-                                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Позиция X"/>
+                                        <local:Scrubber x:Name="PosXSlider" Style="{StaticResource RowSlider}"
+                                                        Minimum="-800" Maximum="800" Step="10" Changed="PosXSlider_Changed"/>
+                                        <local:Digits x:Name="PosXText" Foreground="{StaticResource Dim}"
+                                                      HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <Button x:Name="PosYRow" Style="{StaticResource RowButton}">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Gap"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Позиция Y"/>
+                                        <local:Scrubber x:Name="PosYSlider" Style="{StaticResource RowSlider}"
+                                                        Minimum="0" Maximum="600" Step="5" Changed="PosYSlider_Changed"/>
+                                        <local:Digits x:Name="PosYText" Foreground="{StaticResource Dim}"
+                                                      HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource RowButton}" Click="CenterPos_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Location"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Центрировать по центру"/>
                                     </Grid>
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Glass_Click">

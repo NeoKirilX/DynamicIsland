@@ -44,7 +44,9 @@ public partial class MainWindow
     void SyncWeather()
     {
         WeatherService.Report? now = _weather.Now;
+        bool hasWeather = Settings.Weather && now != null;
         InfoWeatherRow.SetVisible(now != null);
+        IdleWeatherBox.SetVisible(hasWeather);
         WeatherNow.SetVisible(now != null);
         WeatherHours.SetVisible(now != null);
         WeatherSpark.SetVisible(now != null && now.Hours.Length >= 2);
@@ -56,6 +58,7 @@ public partial class MainWindow
         else ShowWeatherNote();
         SyncRim();
         FitWeatherPage();
+        UpdateTargets();
     }
 
     static Color WeatherColor(Sky sky, bool night) => sky switch
@@ -72,8 +75,9 @@ public partial class MainWindow
         Glyph glyph = GlyphOf(now.Sky, now.Night);
         Color tint = WeatherColor(now.Sky, now.Night);
         Brush tintBrush = Shades.Frozen(new SolidColorBrush(tint));
-        InfoWeatherIcon.Kind = MenuWeatherIcon.Kind = WeatherIcon.Kind = glyph;
+        InfoWeatherIcon.Kind = MenuWeatherIcon.Kind = WeatherIcon.Kind = IdleWeatherIcon.Kind = glyph;
         WeatherIcon.Fill = InfoWeatherIcon.Fill = tintBrush;
+        IdleWeatherText.Text = DescribeDegrees(now.Degrees);
 
         var glow = new RadialGradientBrush(tint.WithAlpha(0.24), tint.WithAlpha(0))
         {
