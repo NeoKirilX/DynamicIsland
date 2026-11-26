@@ -135,6 +135,8 @@ public partial class MainWindow
         PlayerVolume.BeginAnimation(OpacityProperty, show);
     }
 
+    int _lastBatteryPercent = -1;
+
     void PollPower()
     {
         bool hasBattery = Native.TryGetBattery(out int percent, out bool plugged);
@@ -145,9 +147,35 @@ public partial class MainWindow
         InfoBat.Foreground = plugged ? _green : percent <= HeadsetLowPercent ? _red : Brushes.White;
         InfoBatIcon.Fill = plugged ? _green : percent <= HeadsetLowPercent ? _red : _dim;
 
-        if (_powerKnown && plugged && !_lastPlugged) ShowCharging(percent);
+        if (_powerKnown && plugged && !_lastPlugged)
+        {
+            SoundService.Play("charging");
+            ShowCharging(percent);
+        }
+        else if (_powerKnown && !plugged && _lastPlugged)
+        {
+            SoundService.Play("unplugged");
+        }
+        else if (_powerKnown && percent <= HeadsetLowPercent && _lastBatteryPercent > HeadsetLowPercent)
+        {
+            SoundService.Play("battery_low");
+        }
         _powerKnown = true;
         _lastPlugged = plugged;
+        _lastBatteryPercent = percent;
+    }
+
+    void PollSystemStats()
+    {
+        bool visible = Settings.SystemStats;
+        InfoCpuRow.SetVisible(visible);
+        InfoRamRow.SetVisible(visible);
+        if (!visible) return;
+
+        int cpu = Native.GetCpuUsage();
+        Native.TryGetMemory(out int ram, out _, out _);
+        InfoCpu.Text = cpu + "%";
+        InfoRam.Text = ram + "%";
     }
 
     void ShowCharging(int percent)

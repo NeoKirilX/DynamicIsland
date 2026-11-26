@@ -22,6 +22,13 @@ public partial class MainWindow
 
     void QrArea_Click(object sender, RoutedEventArgs e) => ReadQr(true);
 
+    void QrGenerate_Click(object sender, RoutedEventArgs e)
+    {
+        var (success, msg, file) = QrService.GenerateAndSave();
+        ShowPanel(Panel.None);
+        Notify(Glyph.Qr, Brushes.White, "QR-код", success ? "Создан и скопирован в буфер" : msg);
+    }
+
     async void ReadQr(bool pickArea)
     {
         if (_readingQr) return;

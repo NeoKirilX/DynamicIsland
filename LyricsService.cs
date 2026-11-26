@@ -41,6 +41,7 @@ sealed partial class LyricsService
     static readonly Regex Channel = new(@"\s*-\s*Topic$|\s*VEVO$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     static readonly Regex Stamped = new(@"^((?:\[\d+:\d+(?:\.\d+)?\])+)(.*)$", RegexOptions.Compiled);
     static readonly Regex Stamp = new(@"\[(\d+):(\d+(?:\.\d+)?)\]", RegexOptions.Compiled);
+    static readonly Regex OffsetTag = new(@"\[offset:\s*([+-]?\d+)\s*\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     Candidate[][] _found = [];
     Line[] _stretched = None;
@@ -86,7 +87,27 @@ sealed partial class LyricsService
             }
             if (best.Length > 0) break;
         }
-        if (best.Length > 0 || !_reworked) return best;
+        if (best.Length > 0 || !_reworked)
+        {
+            if (best.Length == 0 && _found.Length > 0)
+            {
+                double fallbackGap = 15.0;
+                foreach (Candidate[] source in _found)
+                {
+                    foreach (Candidate candidate in source)
+                    {
+                        double gap = Math.Abs(candidate.Duration - seconds);
+                        if (gap <= fallbackGap && (gap < bestGap || best.Length == 0))
+                        {
+                            best = candidate.Lines;
+                            bestGap = gap;
+                        }
+                    }
+                    if (best.Length > 0) break;
+                }
+            }
+            if (best.Length > 0) return best;
+        }
 
         if (Math.Abs(seconds - _stretchedFor) > RestretchAfter)
         {
@@ -224,9 +245,18 @@ sealed partial class LyricsService
     static Line[] Parse(string lrc)
     {
         var lines = new List<Line>();
+        double offsetSec = 0;
         foreach (string raw in lrc.Split('\n'))
         {
-            Match stamped = Stamped.Match(raw.Trim());
+            string trimmed = raw.Trim();
+            Match offsetMatch = OffsetTag.Match(trimmed);
+            if (offsetMatch.Success && double.TryParse(offsetMatch.Groups[1].Value, NumberStyles.Integer | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out double offsetMs))
+            {
+                offsetSec = offsetMs / 1000.0;
+                continue;
+            }
+
+            Match stamped = Stamped.Match(trimmed);
             if (!stamped.Success) continue;
 
             string text = stamped.Groups[2].Value.Trim();
@@ -235,7 +265,8 @@ sealed partial class LyricsService
                 if (!int.TryParse(stamp.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture, out int minutes)
                     || !double.TryParse(stamp.Groups[2].Value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double rest)
                     || minutes > MaxMinutes) continue;
-                lines.Add(new Line(TimeSpan.FromSeconds(minutes * 60 + rest), text));
+                double totalSec = Math.Max(0, minutes * 60 + rest + offsetSec);
+                lines.Add(new Line(TimeSpan.FromSeconds(totalSec), text));
             }
         }
         return lines.OrderBy(line => line.Time).ToArray();

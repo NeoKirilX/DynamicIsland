@@ -38,14 +38,14 @@ public partial class MainWindow : Window
         [View.RecordBig] = new(340, 92, 40),
         [View.RecordSet] = new(320, 92, 40),
         [View.Menu] = new(300, 390, 34),
-        [View.Settings] = new(320, 396, 34),
+        [View.Settings] = new(332, 410, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Shelf] = new(380, 136, 34),
         [View.Weather] = new(340, 190, 34),
         [View.Place] = new(320, 200, 34),
-        [View.Qr] = new(320, 104, 34),
+        [View.Qr] = new(320, 156, 34),
         [View.Update] = new(320, 150, 34),
-        [View.Lyrics] = new(352, 312, 34),
+        [View.Lyrics] = new(352, 380, 34),
         [View.Loading] = new(118, 34, 17),
     };
 
@@ -97,6 +97,7 @@ public partial class MainWindow : Window
     View _view = View.Idle;
     View? _transientView;
     Panel _panel;
+    DateTime _panelOpenedAt = DateTime.MinValue;
     bool _hovered, _pressed, _hiddenByFullscreen, _sentAway;
     IntPtr _hwnd;
     int _ticks;
@@ -154,7 +155,7 @@ public partial class MainWindow : Window
         _springs =
         [
             _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _bubbleSplit, _bubbleScale, _bubbleRecord, _bubbleTimer, _bubbleShelf, _shelfBubbleWidth,
-            _shelfScroll, _lookScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, _lyricSnapX, _lyricSnapY,
+            _shelfScroll, _lookScroll, _settingsScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, _lyricSnapX, _lyricSnapY,
             _pullHandleAlpha, _pullHandleWidth, _pullHandleHeight, _pullHandleOffsetY, _pullHandleDriftX, .. _spotSprings,
         ];
         _timerTint = new SolidColorBrush(_orange.Color);
@@ -370,6 +371,7 @@ public partial class MainWindow : Window
         {
             Safely(UpdateClock);
             Safely(PollPower);
+            Safely(PollSystemStats);
             _ = _weather.RefreshAsync();
             Safely(StayOnTop);
             if (_media.IsPlaying) _lastPlayedAt = DateTime.UtcNow;
@@ -497,6 +499,7 @@ public partial class MainWindow : Window
     void SelectPanel(Panel panel)
     {
         _panel = panel;
+        _panelOpenedAt = DateTime.UtcNow;
         _transientView = null;
         _transientTimeout.Cancel();
         SilenceAlarm();
@@ -505,6 +508,7 @@ public partial class MainWindow : Window
     void ShowPanel(Panel panel)
     {
         _panel = panel;
+        _panelOpenedAt = DateTime.UtcNow;
         UpdateView();
     }
 
@@ -518,5 +522,21 @@ public partial class MainWindow : Window
     {
         _sentAway = false;
         UpdateTargets();
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (_view == View.Look || _panel == Panel.Look)
+        {
+            int step = Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? 50 : Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 10 : 1;
+            switch (e.Key)
+            {
+                case Key.Left: Settings.PosX -= step; ApplyLook(); e.Handled = true; break;
+                case Key.Right: Settings.PosX += step; ApplyLook(); e.Handled = true; break;
+                case Key.Up: Settings.PosY -= step; ApplyLook(); e.Handled = true; break;
+                case Key.Down: Settings.PosY += step; ApplyLook(); e.Handled = true; break;
+            }
+        }
     }
 }

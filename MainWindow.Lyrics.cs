@@ -84,6 +84,7 @@ public partial class MainWindow
         if (_view != View.Media) return;
 
         LyricsService.Line[] lines = _lyrics.LinesFor(_media.Duration);
+        if (Settings.ComboEnabled) lines = ComboEngine.Process(lines, _media.Duration);
         TimeSpan at = LyricTime;
         int index = LineAt(lines, at);
 
@@ -149,6 +150,7 @@ public partial class MainWindow
     void UpdatePlayerLyrics(bool snap)
     {
         LyricsService.Line[] lines = _lyrics.LinesFor(_media.Duration);
+        if (Settings.ComboEnabled) lines = ComboEngine.Process(lines, _media.Duration);
         if (!ReferenceEquals(lines, _playerLines))
         {
             _playerLines = lines;

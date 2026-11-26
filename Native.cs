@@ -239,4 +239,66 @@ static class Native
         plugged = status.ACLineStatus == AC_LINE_ONLINE;
         return true;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct MEMORYSTATUSEX
+    {
+        public uint dwLength;
+        public uint dwMemoryLoad;
+        public ulong ullTotalPhys;
+        public ulong ullAvailPhys;
+        public ulong ullTotalPageFile;
+        public ulong ullAvailPageFile;
+        public ulong ullTotalVirtual;
+        public ulong ullAvailVirtual;
+        public ulong ullAvailExtendedVirtual;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool GetSystemTimes(out System.Runtime.InteropServices.ComTypes.FILETIME idleTime, out System.Runtime.InteropServices.ComTypes.FILETIME kernelTime, out System.Runtime.InteropServices.ComTypes.FILETIME userTime);
+
+    static ulong _lastIdle, _lastKernel, _lastUser;
+    static bool _cpuInitialized;
+
+    public static int GetCpuUsage()
+    {
+        if (!GetSystemTimes(out var idle, out var kernel, out var user)) return 0;
+        ulong i = ((ulong)idle.dwHighDateTime << 32) | (uint)idle.dwLowDateTime;
+        ulong k = ((ulong)kernel.dwHighDateTime << 32) | (uint)kernel.dwLowDateTime;
+        ulong u = ((ulong)user.dwHighDateTime << 32) | (uint)user.dwLowDateTime;
+
+        if (!_cpuInitialized)
+        {
+            _lastIdle = i; _lastKernel = k; _lastUser = u;
+            _cpuInitialized = true;
+            return 0;
+        }
+
+        ulong dIdle = i - _lastIdle;
+        ulong dKernel = k - _lastKernel;
+        ulong dUser = u - _lastUser;
+        _lastIdle = i; _lastKernel = k; _lastUser = u;
+
+        ulong total = dKernel + dUser;
+        if (total == 0) return 0;
+        ulong used = total > dIdle ? total - dIdle : 0;
+        return (int)Math.Clamp(Math.Round(used * 100.0 / total), 0, 100);
+    }
+
+    public static bool TryGetMemory(out int percent, out double usedGb, out double totalGb)
+    {
+        var mem = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>() };
+        if (GlobalMemoryStatusEx(ref mem))
+        {
+            percent = (int)mem.dwMemoryLoad;
+            totalGb = Math.Round((double)mem.ullTotalPhys / (1024 * 1024 * 1024), 1);
+            usedGb = Math.Round((double)(mem.ullTotalPhys - mem.ullAvailPhys) / (1024 * 1024 * 1024), 1);
+            return true;
+        }
+        percent = 0; usedGb = totalGb = 0;
+        return false;
+    }
 }

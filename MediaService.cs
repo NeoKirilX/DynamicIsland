@@ -47,7 +47,7 @@ sealed class MediaService
 
     public event Action? Changed;
 
-    public string Title => _title.Length > 0 ? _title : _barTitle;
+    public string Title => Capitalize(_title.Length > 0 ? _title : _barTitle);
     public string Artist => _title.Length > 0 ? _artist : _barArtist;
     public string Name => Title.Length > 0 ? Title : SourceApp.Name(Source) is { Length: > 0 } app ? app : Untitled;
     public ImageSource? Art { get; private set; }
@@ -58,6 +58,26 @@ sealed class MediaService
     public TimeSpan Duration => _duration;
     public bool HasBarPosition => _noTimeline && _barFound;
     public bool Seekable => _noTimeline ? _barFound : _duration.TotalSeconds >= 1;
+
+    public void RaisePlayer() => SourceApp.BringToFront(Source, Title);
+
+    static string Capitalize(string text)
+    {
+        if (!Settings.CapitalizeTitle || string.IsNullOrEmpty(text)) return text;
+        if (char.IsUpper(text[0])) return text;
+        return char.ToUpper(text[0]) + text.Substring(1);
+    }
+
+    bool IsShortSound(Session session)
+    {
+        try
+        {
+            var timeline = session.GetTimelineProperties();
+            double seconds = (timeline.EndTime - timeline.StartTime).TotalSeconds;
+            return seconds > 0 && seconds < Settings.MinMusicDuration;
+        }
+        catch { return false; }
+    }
 
     public double Progress => _duration.TotalSeconds >= 1 ? Math.Clamp(Position / _duration, 0, 1)
         : HasBarPosition && _barPercent > 0 ? _barPercent / 100.0 : 0;
@@ -193,9 +213,9 @@ sealed class MediaService
         catch { return false; }
     }
 
-    static bool IsPlayingSession(Session session)
+    bool IsPlayingSession(Session session)
     {
-        try { return session.GetPlaybackInfo().PlaybackStatus == Status.Playing; }
+        try { return session.GetPlaybackInfo().PlaybackStatus == Status.Playing && !IsShortSound(session); }
         catch { return false; }
     }
 

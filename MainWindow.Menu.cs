@@ -19,6 +19,7 @@ public partial class MainWindow
     const int PointerLyricOff = 0, FirstPointerLyricShape = 1;
 
     Border? _openLookTiles;
+    readonly Spring _settingsScroll = new(0, 260, 30);
     readonly Spring _lookScroll = new(0, 260, 30);
     readonly Spring _updateNotesScroll = new(0, 260, 30);
 
@@ -114,6 +115,112 @@ public partial class MainWindow
         CheckFullscreen();
     }
 
+    void Shadow_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.Shadow = !Settings.Shadow;
+        UpdateSwitches(true);
+        StartShapeLoop();
+    }
+
+    void SystemStats_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.SystemStats = !Settings.SystemStats;
+        UpdateSwitches(true);
+    }
+
+    void ClickLock_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ClickLock = !Settings.ClickLock;
+        UpdateSwitches(true);
+    }
+
+    void Capitalize_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.CapitalizeTitle = !Settings.CapitalizeTitle;
+        UpdateSwitches(true);
+    }
+
+    void Obs_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.Obs = !Settings.Obs;
+        UpdateSwitches(true);
+    }
+
+    void Language_Click(object sender, RoutedEventArgs e)
+    {
+        var langs = Localization.SupportedLanguages;
+        int idx = Array.IndexOf(langs, Settings.Language);
+        Settings.Language = langs[(idx + 1) % langs.Length];
+        UpdateSwitches(true);
+    }
+
+    void ExportConfig_Click(object sender, RoutedEventArgs e)
+    {
+        ConfigService.ExportWithDialog();
+    }
+
+    void ImportConfig_Click(object sender, RoutedEventArgs e)
+    {
+        if (ConfigService.ImportWithDialog())
+        {
+            UpdateSwitches(true);
+            RefreshLookPage();
+            ApplyLook();
+        }
+    }
+
+    void ClearCache_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string cacheDir = System.IO.Path.Combine(appData, "DynamicIsland", "Cache");
+            if (System.IO.Directory.Exists(cacheDir))
+            {
+                System.IO.Directory.Delete(cacheDir, true);
+                System.IO.Directory.CreateDirectory(cacheDir);
+            }
+        }
+        catch { }
+    }
+
+    void Combo_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ComboEnabled = !Settings.ComboEnabled;
+        UpdateSwitches(true);
+    }
+
+    void ComboStyle_Click(object sender, RoutedEventArgs e)
+    {
+        int total = Enum.GetValues<ComboCounterStyle>().Length;
+        Settings.ComboCounterStyle = (ComboCounterStyle)(((int)Settings.ComboCounterStyle + 1) % total);
+        UpdateSwitches(true);
+    }
+
+    double SettingsOverflow => Math.Max(SettingsRows.ActualHeight + SettingsRows.Margin.Top + SettingsRows.Margin.Bottom - SettingsView.Height, 0);
+
+    void SettingsRows_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        _settingsScroll.Target = Math.Clamp(_settingsScroll.Target, 0, SettingsOverflow);
+        StartShapeLoop();
+    }
+
+    void ScrollSettings(int notches)
+    {
+        _settingsScroll.Target = Math.Clamp(_settingsScroll.Target + notches * LookWheelStep, 0, SettingsOverflow);
+        StartShapeLoop();
+    }
+
+    void ApplySettingsScroll()
+    {
+        double scrolled = _settingsScroll.Value;
+        SettingsEdgeTop.Color = EdgeFade(scrolled);
+        SettingsEdgeBottom.Color = EdgeFade(SettingsOverflow - scrolled);
+        if (SettingsMove.Y == -scrolled) return;
+        SettingsMove.Y = -scrolled;
+        if (_view == View.Settings) SettingsRows.FollowPointer();
+    }
+
     void UpdateSwitches(bool animate)
     {
         LyricsState.Text = Settings.Lyrics ? "Вкл" : "Выкл";
@@ -121,7 +228,24 @@ public partial class MainWindow
         LyricEffectsSwitch.Set(Settings.LyricEffects, animate);
         PointerLyricSegments.Set(Settings.PointerLyric ? FirstPointerLyricShape + (int)Settings.PointerLyricShape : PointerLyricOff, animate);
         LyricPartingSwitch.Set(Settings.LyricParting, animate);
+        ComboSwitch.Set(Settings.ComboEnabled, animate);
+        ComboStyleText.Text = Settings.ComboCounterStyle switch
+        {
+            ComboCounterStyle.EnX => "x1",
+            ComboCounterStyle.Times => "×1",
+            ComboCounterStyle.Brackets => "(1)",
+            ComboCounterStyle.Square => "[1]",
+            ComboCounterStyle.Hash => "#1",
+            ComboCounterStyle.Progress => "1/4",
+            _ => "х1",
+        };
         RimSwitch.Set(Settings.Rim, animate);
+        ShadowSwitch.Set(Settings.Shadow, animate);
+        SystemStatsSwitch.Set(Settings.SystemStats, animate);
+        ClickLockSwitch.Set(Settings.ClickLock, animate);
+        CapitalizeSwitch.Set(Settings.CapitalizeTitle, animate);
+        ObsSwitch.Set(Settings.Obs, animate);
+        LanguageText.Text = Settings.Language.ToUpperInvariant();
         AppVolumeSwitch.Set(Settings.AppVolume, animate);
         NetworkSwitch.Set(Settings.Network, animate);
         WeatherSwitch.Set(Settings.Weather, animate);
@@ -376,12 +500,28 @@ public partial class MainWindow
         SyncRim();
     }
 
+    void RadiusSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.Radius = (int)RadiusSlider.Value;
+        RadiusText.Text = Settings.Radius + " px";
+        UpdateTargets();
+    }
+
+    void ResetPos_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.PosX = 0;
+        Settings.PosY = 0;
+        ApplyLook();
+    }
+
     void RefreshLookPage()
     {
         SizeText.Text = Settings.Scale + "%";
         GapText.Text = Settings.Gap + " px";
+        RadiusText.Text = Settings.Radius + " px";
         SizeSlider.Set(Settings.Scale, LookView.IsVisible);
         GapSlider.Set(Settings.Gap, LookView.IsVisible);
+        RadiusSlider.Set(Settings.Radius, LookView.IsVisible);
         DotsSegments.Set(Settings.Dots ? 1 : 0, LookView.IsVisible);
         SeekStyleSegments.Set(Settings.LineBar ? 1 : 0, LookView.IsVisible);
         SeekHoverSegments.Set((int)Settings.SeekHover, LookView.IsVisible);

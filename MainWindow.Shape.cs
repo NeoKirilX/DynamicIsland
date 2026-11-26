@@ -231,25 +231,28 @@ public partial class MainWindow
         double scale = Math.Max(_scale.Value, MinScale), size = Math.Max(_userScale.Value, MinScale);
         double dpi = VisualTreeHelper.GetDpi(this).DpiScaleY;
 
+        double radius = Settings.Radius < 100 ? (r * Settings.Radius / 100.0) : r;
         Pill.Width = w;
         Pill.Height = h;
-        Pill.CornerRadius = new CornerRadius(r);
+        Pill.CornerRadius = new CornerRadius(radius);
         Canvas.SetLeft(BackdropBox, pill.Left);
         BackdropBox.Width = w;
         BackdropBox.Height = h;
-        Shadow.Opacity = 0.34 + 0.66 * Math.Clamp((h - CompactMaxHeight) / ShadowFadeHeight, 0, 1);
+        Shadow.Opacity = Settings.Shadow ? (0.34 + 0.66 * Math.Clamp((h - CompactMaxHeight) / ShadowFadeHeight, 0, 1)) : 0;
 
         FitMediaViews(w, h);
         if (_morphing) FitViews(w, h);
         ApplyMotionBlur();
         ApplyShelfScroll();
         ApplyLookScroll();
+        ApplySettingsScroll();
         ApplyUpdateNotesScroll();
         StretchVolumeBar();
 
         IslandScale.ScaleX = IslandScale.ScaleY = scale;
         RootSize.ScaleX = RootSize.ScaleY = size;
-        RootMove.Y = _offsetY.Value + _topGap.Value / size;
+        RootMove.X = Settings.PosX;
+        RootMove.Y = _offsetY.Value + (_topGap.Value + Settings.PosY) / size;
         RootLean.X = Math.Round(_leanX.Value * size * dpi) / (size * dpi);
         SharpenLyricCache(dpi);
 

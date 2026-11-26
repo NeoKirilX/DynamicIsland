@@ -303,10 +303,17 @@ public partial class MainWindow
         EqMove.Y = _barsCenterY.Value - eqH / 2;
     }
 
-    void Play_Click(object sender, RoutedEventArgs e) => _media.TogglePlay();
+    bool IsClickLocked => Settings.ClickLock && (DateTime.UtcNow - _panelOpenedAt).TotalMilliseconds < 350;
+
+    void Play_Click(object sender, RoutedEventArgs e)
+    {
+        if (IsClickLocked) return;
+        _media.TogglePlay();
+    }
 
     void Prev_Click(object sender, RoutedEventArgs e)
     {
+        if (IsClickLocked) return;
         RememberSkip(-1);
         PrevIcon.Play();
         _media.Previous();
@@ -314,6 +321,7 @@ public partial class MainWindow
 
     void Next_Click(object sender, RoutedEventArgs e)
     {
+        if (IsClickLocked) return;
         RememberSkip(1);
         NextIcon.Play();
         _media.Next();
