@@ -23,7 +23,11 @@ public partial class MainWindow
     readonly Spring _lookScroll = new(0, 260, 30);
     readonly Spring _updateNotesScroll = new(0, 260, 30);
 
-    void SettingsRow_Click(object sender, RoutedEventArgs e) => ShowPanelAndCheckUpdate(Panel.Settings);
+    void SettingsRow_Click(object sender, RoutedEventArgs e)
+    {
+        _settingsScroll.Snap(0);
+        ShowPanelAndCheckUpdate(Panel.Settings);
+    }
 
     void UpdateRow_Click(object sender, RoutedEventArgs e) => ShowPanelAndCheckUpdate(Panel.Update);
 
@@ -211,11 +215,30 @@ public partial class MainWindow
         StartShapeLoop();
     }
 
+    void ShrinkSettingsEdges(double scrolled)
+    {
+        double top = Math.Clamp(scrolled / LookEdgeZone, 0, 1), bottom = Math.Clamp((SettingsOverflow - scrolled) / LookEdgeZone, 0, 1);
+        foreach (FrameworkElement row in SettingsRows.Children)
+        {
+            double middle = VisualTreeHelper.GetOffset(row).Y + SettingsRows.Margin.Top + row.ActualHeight / 2 - scrolled;
+            double fromTop = Math.Clamp(middle / LookEdgeZone, 0, 1), fromBottom = Math.Clamp((SettingsView.Height - middle) / LookEdgeZone, 0, 1);
+            double shrink = Math.Max(top * Smooth(1 - fromTop), bottom * Smooth(1 - fromBottom));
+
+            if (row.RenderTransform is not ScaleTransform size)
+            {
+                row.RenderTransform = size = new ScaleTransform();
+                row.RenderTransformOrigin = new Point(0.5, 0.5);
+            }
+            size.ScaleX = size.ScaleY = 1 - (1 - LookEdgeScale) * shrink;
+        }
+    }
+
     void ApplySettingsScroll()
     {
         double scrolled = _settingsScroll.Value;
         SettingsEdgeTop.Color = EdgeFade(scrolled);
         SettingsEdgeBottom.Color = EdgeFade(SettingsOverflow - scrolled);
+        if (SettingsView.IsVisible) ShrinkSettingsEdges(scrolled);
         if (SettingsMove.Y == -scrolled) return;
         SettingsMove.Y = -scrolled;
         if (_view == View.Settings) SettingsRows.FollowPointer();
