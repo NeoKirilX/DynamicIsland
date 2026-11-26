@@ -13,9 +13,9 @@ namespace DynamicIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Media, Timer, Record, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, RecordBig, RecordSet, Menu, Settings, Look, Shelf, Weather, Place, Qr, Update, Lyrics, Loading }
+    enum View { Idle, Media, Timer, Record, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, RecordBig, RecordSet, Menu, Settings, Look, Shelf, Weather, Place, Qr, Update, Lyrics, Notifications, Loading }
 
-    enum Panel { None, Player, Timer, TimerSet, Record, Menu, Settings, Look, Shelf, Weather, Place, Qr, Update, Lyrics }
+    enum Panel { None, Player, Timer, TimerSet, Record, Menu, Settings, Look, Shelf, Weather, Place, Qr, Update, Lyrics, Notifications }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -34,7 +34,7 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(380, PlayerHeight, 40),
         [View.IdleBig] = new(320, 124, 38),
         [View.TimerBig] = new(330, 92, 40),
-        [View.TimerSet] = new(300, 190, 38),
+        [View.TimerSet] = new(320, 220, 38),
         [View.RecordBig] = new(340, 92, 40),
         [View.RecordSet] = new(320, 92, 40),
         [View.Menu] = new(300, 390, 34),
@@ -43,9 +43,10 @@ public partial class MainWindow : Window
         [View.Shelf] = new(380, 136, 34),
         [View.Weather] = new(340, 190, 34),
         [View.Place] = new(320, 200, 34),
-        [View.Qr] = new(320, 156, 34),
+        [View.Qr] = new(330, 220, 34),
         [View.Update] = new(320, 150, 34),
         [View.Lyrics] = new(352, 380, 34),
+        [View.Notifications] = new(352, 380, 34),
         [View.Loading] = new(118, 34, 17),
     };
 
@@ -65,7 +66,7 @@ public partial class MainWindow : Window
 
     static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.RecordSet, View.RecordBig, View.Shelf, View.Weather, View.Qr];
 
-    static readonly View[] SettingsPages = [View.Update, View.Lyrics];
+    static readonly View[] SettingsPages = [View.Update, View.Lyrics, View.Notifications];
 
     static readonly View[] WeatherPages = [View.Place];
 
@@ -86,6 +87,7 @@ public partial class MainWindow : Window
     readonly MediaService _media;
     readonly LyricsService _lyrics = new();
     readonly NetworkService _network;
+    NotificationInterceptor? _notificationInterceptor;
     readonly Updater _updater = new();
     readonly Stopwatch _clock = Stopwatch.StartNew();
     readonly DispatcherTimer _ticker = new() { Interval = TickInterval };
@@ -141,6 +143,7 @@ public partial class MainWindow : Window
             [View.Qr] = QrView,
             [View.Update] = UpdatePage,
             [View.Lyrics] = LyricsPage,
+            [View.Notifications] = NotificationsPage,
             [View.Loading] = LoadingView,
         };
         _backdrops = new()
@@ -182,6 +185,15 @@ public partial class MainWindow : Window
         _media.Changed += OnMediaChanged;
         _lyrics.Changed += OnLyricsChanged;
         _network = new NetworkService(Dispatcher);
+        _notificationInterceptor = new NotificationInterceptor(Dispatcher, (title, body) =>
+        {
+            if (!Settings.InterceptWindowsNotifications) return;
+            Notify(Glyph.Bell, Brushes.White, string.IsNullOrEmpty(title) ? "Уведомление" : title, body);
+        });
+        if (Settings.InterceptWindowsNotifications)
+        {
+            _ = _notificationInterceptor.StartAsync();
+        }
         _network.Changed += OnNetworkChanged;
         _updater.Changed += RefreshUpdatePage;
         _shelf = new Shelf(Dispatcher);

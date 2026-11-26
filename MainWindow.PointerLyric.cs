@@ -60,7 +60,7 @@ public partial class MainWindow
     {
         if (!Settings.PointerLyric || !Settings.Lyrics || !_media.IsPlaying || _hiddenByFullscreen) return ("", 0, 0);
 
-        LyricsService.Line[] lines = _lyrics.LinesFor(_media.Duration);
+        LyricsService.Line[] lines = GetProcessedLyrics();
         TimeSpan at = LyricTime;
         int index = LineAt(lines, at);
         string text = index < 0 ? "" : lines[index].Text.Trim();

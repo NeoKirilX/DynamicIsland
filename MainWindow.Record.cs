@@ -157,7 +157,7 @@ public partial class MainWindow
     void OnRecordingSaved(string path, TimeSpan length)
     {
         if (_panel is Panel.Record) _panel = Panel.None;
-        Notify(Glyph.Folder, _red, "Запись сохранена · " + DescribeElapsed(length), Path.GetFileName(path), RecordNoticeSeconds,
+        if (Settings.NotifyObs) Notify(Glyph.Folder, _red, "Запись сохранена · " + DescribeElapsed(length), Path.GetFileName(path), RecordNoticeSeconds,
             open: () => ShowInFolder(path));
     }
 

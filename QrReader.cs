@@ -25,7 +25,7 @@ static class QrReader
         return reader.Decode(new RGBLuminanceSource(pixels, width, height, RGBLuminanceSource.BitmapFormat.BGR32))?.Text;
     }
 
-    static byte[] Capture(int left, int top, int width, int height)
+    public static byte[] Capture(int left, int top, int width, int height)
     {
         byte[] pixels = new byte[width * height * BytesPerPixel];
         IntPtr screen = GetDC(IntPtr.Zero), memory = CreateCompatibleDC(screen), bitmap = CreateCompatibleBitmap(screen, width, height);

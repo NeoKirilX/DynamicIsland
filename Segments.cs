@@ -35,7 +35,64 @@ public sealed class Segments : FrameworkElement
     string[] _labels = [];
     int _picked;
     bool _held;
+    bool _dragging;
     long _pressedAt;
+
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonDown(e);
+        CaptureMouse();
+        _dragging = true;
+        _held = true;
+        _pressedAt = Stopwatch.GetTimestamp();
+        _press.Tune(900, 38);
+        _press.Target = 1;
+
+        Point p = e.GetPosition(this);
+        UpdateDrag(p.X);
+        _loop.Start();
+        e.Handled = true;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        if (_dragging)
+        {
+            Point p = e.GetPosition(this);
+            UpdateDrag(p.X);
+            e.Handled = true;
+        }
+    }
+
+    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonUp(e);
+        if (_dragging)
+        {
+            _dragging = false;
+            ReleaseMouseCapture();
+            _held = false;
+
+            int target = Math.Clamp((int)Math.Round(_at.Target), 0, _labels.Length - 1);
+            Set(target, true);
+            if (_row != null)
+            {
+                _row.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent, _row));
+            }
+            e.Handled = true;
+        }
+    }
+
+    void UpdateDrag(double x)
+    {
+        double cell = CellWidth(ActualWidth);
+        if (cell <= 0 || _labels.Length == 0) return;
+        double frac = Math.Clamp((x - KnobInset) / cell - 0.5, 0, _labels.Length - 1);
+        _at.Target = frac;
+        _picked = Math.Clamp((int)Math.Round(frac), 0, _labels.Length - 1);
+        _loop.Start();
+    }
 
     public Segments()
     {

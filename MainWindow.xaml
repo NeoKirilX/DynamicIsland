@@ -850,9 +850,19 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="TimerSetView" Width="300" Height="190" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <StackPanel Margin="14,14,14,0">
-                        <TextBlock Style="{StaticResource Caption}" Text="ТАЙМЕР" Margin="8,0,0,0"/>
+                <Grid x:Name="TimerSetView" Width="320" Height="220" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <StackPanel Margin="14,12,14,0">
+                        <Grid Margin="6,0,6,4">
+                            <TextBlock Style="{StaticResource Caption}" Text="ТАЙМЕР" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button x:Name="TimerIntervalBtn" Style="{StaticResource ChipButton}" Height="22" Padding="6,0" Margin="0,0,6,0" Click="TimerInterval_Click">
+                                    <TextBlock x:Name="TimerIntervalText" Text="Повтор: Выкл" FontSize="11" Foreground="{StaticResource Dim}"/>
+                                </Button>
+                                <Button x:Name="TimerOvertimeBtn" Style="{StaticResource ChipButton}" Height="22" Padding="6,0" Click="TimerOvertime_Click">
+                                    <TextBlock x:Name="TimerOvertimeText" Text="Овертайм" FontSize="11" Foreground="{StaticResource Dim}"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
                         <local:Puddle Height="56">
                             <Button Style="{StaticResource IconButton}" HorizontalAlignment="Left" Click="TimerLess_Click">
                                 <Grid Width="36" Height="36">
@@ -871,11 +881,13 @@
                             </Button>
                         </local:Puddle>
                         <UniformGrid x:Name="TimerPresets" Rows="1" Margin="0,4,0,0">
-                            <Button Style="{StaticResource ChipButton}" Tag="5" Content="5 мин" Click="TimerPreset_Click"/>
-                            <Button Style="{StaticResource ChipButton}" Tag="10" Content="10 мин" Click="TimerPreset_Click"/>
-                            <Button Style="{StaticResource ChipButton}" Tag="15" Content="15 мин" Click="TimerPreset_Click"/>
-                            <Button Style="{StaticResource ChipButton}" Tag="25" Content="25 мин" Click="TimerPreset_Click"/>
-                            <Button Style="{StaticResource ChipButton}" Tag="45" Content="45 мин" Click="TimerPreset_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Tag="1" Content="1м" Click="TimerPreset_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Tag="5" Content="5м" Click="TimerPreset_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Tag="10" Content="10м" Click="TimerPreset_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Tag="15" Content="15м" Click="TimerPreset_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Tag="25" Content="25м" Click="TimerPreset_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Tag="45" Content="45м" Click="TimerPreset_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Tag="60" Content="1ч" Click="TimerPreset_Click"/>
                         </UniformGrid>
                         <Button Style="{StaticResource ChipButton}" Height="36" Margin="2,10,2,0" Content="Запустить"
                                 Background="{StaticResource Orange}" Foreground="Black" FontSize="13.5" FontWeight="SemiBold"
@@ -1143,6 +1155,13 @@
                                         <local:Toggle x:Name="AutostartSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>
                                 </Button>
+                                <Button Style="{StaticResource RowButton}" Click="NotificationsRow_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Bell"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Уведомления"/>
+                                        <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
                                 <Border Style="{StaticResource RowDivider}"/>
                                 <Button Style="{StaticResource RowButton}" Click="UpdateRow_Click">
                                     <Grid>
@@ -1219,6 +1238,69 @@
                                 </StackPanel>
                             </ToggleButton>
                         </UniformGrid>
+                    </local:RowList>
+                </Grid>
+
+                <Grid x:Name="NotificationsPage" Width="352" Height="380" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <local:RowList Margin="10,8,10,0">
+                        <Button Style="{StaticResource BackButton}" Content="УВЕДОМЛЕНИЯ" Click="NotificationsBack_Click"/>
+                        <Button Style="{StaticResource RowButton}" Click="InterceptNotifs_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Bell"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Перехват уведомлений Windows"/>
+                                <local:Toggle x:Name="InterceptNotifsSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <TextBlock Style="{StaticResource Caption}" Text="ТИПЫ УВЕДОМЛЕНИЙ" Margin="12,10,0,4"/>
+                        <Button Style="{StaticResource RowButton}" Click="NotifyDnd_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Moon"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Не беспокоить (DND)"/>
+                                <local:Toggle x:Name="NotifyDndSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="NotifyHeadphones_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Headphones"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Наушники"/>
+                                <local:Toggle x:Name="NotifyHeadphonesSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="NotifyBattery_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Battery"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Батарея"/>
+                                <local:Toggle x:Name="NotifyBatterySwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="NotifyVpn_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Vpn"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="VPN"/>
+                                <local:Toggle x:Name="NotifyVpnSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="NotifyTimer_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Timer"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Таймер"/>
+                                <local:Toggle x:Name="NotifyTimerSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="NotifyObs_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Record"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Запись OBS"/>
+                                <local:Toggle x:Name="NotifyObsSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="NotifyShelf_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Tray"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Полка файлов"/>
+                                <local:Toggle x:Name="NotifyShelfSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
                     </local:RowList>
                 </Grid>
 
@@ -1395,6 +1477,26 @@
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Стекло"/>
                                         <local:Toggle x:Name="GlassSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Expand"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Макс. ширина"/>
+                                    <local:Scrubber x:Name="MaxIslandWidthSlider" Style="{StaticResource RowSlider}" Minimum="220" Maximum="800" Step="10" Changed="MaxIslandWidthSlider_Changed"/>
+                                    <local:Digits x:Name="MaxIslandWidthText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Button Style="{StaticResource RowButton}" Click="InvertGesture_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Chevron"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Инвертировать жест трека"/>
+                                        <local:Toggle x:Name="InvertGestureSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource RowButton}" Click="ShowArtist_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Note"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Показывать автора трека"/>
+                                        <local:Toggle x:Name="ShowArtistSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>
                                 </Button>
                                 <Border Style="{StaticResource RowDivider}"/>
@@ -1704,19 +1806,29 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="QrView" Width="320" Height="156" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="QrView" Width="330" Height="220" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <StackPanel Margin="10,8,10,0" VerticalAlignment="Top">
                         <local:RowList>
-                            <Button Style="{StaticResource BackButton}" Content="QR-КОД С ЭКРАНА" Click="SettingsBack_Click"/>
+                            <Button Style="{StaticResource BackButton}" Content="QR И ТЕКСТ С ЭКРАНА" Click="SettingsBack_Click"/>
                         </local:RowList>
-                        <UniformGrid Rows="1" Margin="2,4,2,0">
-                            <Button Style="{StaticResource ChipButton}" Height="40" FontSize="13.5" FontWeight="SemiBold"
+                        <TextBlock Text="РАСПОЗНАВАНИЕ QR" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Dim}" Margin="6,2,0,4"/>
+                        <UniformGrid Rows="1" Margin="2,0,2,0">
+                            <Button Style="{StaticResource ChipButton}" Height="36" FontSize="12.5" FontWeight="SemiBold"
                                     Content="Весь экран" Click="QrScreen_Click"/>
-                            <Button Style="{StaticResource ChipButton}" Height="40" FontSize="13.5" FontWeight="SemiBold"
+                            <Button Style="{StaticResource ChipButton}" Height="36" FontSize="12.5" FontWeight="SemiBold"
                                     Content="Выбрать область" Click="QrArea_Click"/>
                         </UniformGrid>
-                        <Button Style="{StaticResource ChipButton}" Height="40" FontSize="13.5" FontWeight="SemiBold"
-                                Margin="2,8,2,0" Content="Создать из буфера" Click="QrGenerate_Click"/>
+                        <TextBlock Text="ИЗВЛЕЧЬ ТЕКСТ (OCR)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Dim}" Margin="6,8,0,4"/>
+                        <UniformGrid Rows="1" Margin="2,0,2,0">
+                            <Button Style="{StaticResource ChipButton}" Height="36" FontSize="12.5" FontWeight="SemiBold"
+                                    Content="С экрана" Click="OcrScreen_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Height="36" FontSize="12.5" FontWeight="SemiBold"
+                                    Content="Выбрать область" Click="OcrArea_Click"/>
+                            <Button Style="{StaticResource ChipButton}" Height="36" FontSize="12.5" FontWeight="SemiBold"
+                                    Content="Из полки" Click="OcrShelf_Click"/>
+                        </UniformGrid>
+                        <Button Style="{StaticResource ChipButton}" Height="34" FontSize="12.5" FontWeight="SemiBold"
+                                Margin="2,8,2,0" Content="Создать QR из буфера" Click="QrGenerate_Click"/>
                     </StackPanel>
                 </Grid>
 

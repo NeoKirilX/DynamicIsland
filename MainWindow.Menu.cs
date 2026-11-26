@@ -64,6 +64,67 @@ public partial class MainWindow
 
     void LyricsBack_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Settings);
 
+    void NotificationsRow_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Notifications);
+
+    void NotificationsBack_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Settings);
+
+    void InterceptNotifs_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.InterceptWindowsNotifications = !Settings.InterceptWindowsNotifications;
+        UpdateSwitches(true);
+        if (Settings.InterceptWindowsNotifications)
+        {
+            _notificationInterceptor ??= new NotificationInterceptor(Dispatcher, (title, body) =>
+            {
+                if (!Settings.InterceptWindowsNotifications) return;
+                Notify(Glyph.Bell, Brushes.White, string.IsNullOrEmpty(title) ? "Уведомление" : title, body);
+            });
+            _ = _notificationInterceptor.StartAsync();
+        }
+    }
+
+    void NotifyDnd_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NotifyDnd = !Settings.NotifyDnd;
+        UpdateSwitches(true);
+    }
+
+    void NotifyHeadphones_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NotifyHeadphones = !Settings.NotifyHeadphones;
+        UpdateSwitches(true);
+    }
+
+    void NotifyBattery_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NotifyBattery = !Settings.NotifyBattery;
+        UpdateSwitches(true);
+    }
+
+    void NotifyVpn_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NotifyVpn = !Settings.NotifyVpn;
+        UpdateSwitches(true);
+    }
+
+    void NotifyTimer_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NotifyTimer = !Settings.NotifyTimer;
+        UpdateSwitches(true);
+    }
+
+    void NotifyObs_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NotifyObs = !Settings.NotifyObs;
+        UpdateSwitches(true);
+    }
+
+    void NotifyShelf_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NotifyShelf = !Settings.NotifyShelf;
+        UpdateSwitches(true);
+    }
+
     void Source_Click(object sender, RoutedEventArgs e)
     {
         var picked = (LyricSource)(1 << SourceChips.Children.IndexOf((UIElement)sender));
@@ -268,6 +329,14 @@ public partial class MainWindow
         WeatherSwitch.Set(Settings.Weather, animate);
         FullscreenSwitch.Set(Settings.HideFullscreen, animate);
         AutostartSwitch.Set(Autostart.Enabled, animate);
+        InterceptNotifsSwitch.Set(Settings.InterceptWindowsNotifications, animate);
+        NotifyDndSwitch.Set(Settings.NotifyDnd, animate);
+        NotifyHeadphonesSwitch.Set(Settings.NotifyHeadphones, animate);
+        NotifyBatterySwitch.Set(Settings.NotifyBattery, animate);
+        NotifyVpnSwitch.Set(Settings.NotifyVpn, animate);
+        NotifyTimerSwitch.Set(Settings.NotifyTimer, animate);
+        NotifyObsSwitch.Set(Settings.NotifyObs, animate);
+        NotifyShelfSwitch.Set(Settings.NotifyShelf, animate);
 
         for (int i = 0; i < SourceChips.Children.Count; i++)
             ((ToggleButton)SourceChips.Children[i]).IsChecked = Settings.LyricSources.HasFlag((LyricSource)(1 << i));
@@ -370,6 +439,26 @@ public partial class MainWindow
         int was = Settings.Gap;
         Settings.Gap = px;
         if (Settings.Gap != was) ApplyLook();
+    }
+
+    void MaxIslandWidthSlider_Changed(object sender, RoutedEventArgs e)
+    {
+        Settings.MaxIslandWidth = (int)MaxIslandWidthSlider.Value;
+        MaxIslandWidthText.Text = $"{Settings.MaxIslandWidth} px";
+        StartShapeLoop();
+    }
+
+    void InvertGesture_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.InvertMediaGesture = !Settings.InvertMediaGesture;
+        RefreshLookPage();
+    }
+
+    void ShowArtist_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowTrackArtist = !Settings.ShowTrackArtist;
+        RefreshLookPage();
+        OnMediaChanged();
     }
 
     void Dots_Click(object sender, RoutedEventArgs e)
@@ -678,6 +767,10 @@ public partial class MainWindow
         SeekGlowSwitch.Set(Settings.SeekGlow, LookView.IsVisible);
         CompactProgressSegments.Set((int)Settings.CompactProgress, LookView.IsVisible);
         GlassSwitch.Set(Settings.Glass, LookView.IsVisible);
+        MaxIslandWidthSlider.Set(Settings.MaxIslandWidth, LookView.IsVisible);
+        MaxIslandWidthText.Text = $"{Settings.MaxIslandWidth} px";
+        InvertGestureSwitch.Set(Settings.InvertMediaGesture, LookView.IsVisible);
+        ShowArtistSwitch.Set(Settings.ShowTrackArtist, LookView.IsVisible);
         ((RadioButton)BackdropStrip.Children[(int)Settings.Backdrop]).IsChecked = true;
         ((RadioButton)LyricChangeStrip.Children[(int)Settings.LyricChange]).IsChecked = true;
         ((RadioButton)HoverStrip.Children[(int)Settings.Hover]).IsChecked = true;

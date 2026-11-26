@@ -192,6 +192,21 @@ static class Settings
     static int _comboMinWordLen = Math.Clamp(Read(nameof(ComboMinWordLen), 2), 1, 5);
     static double _minMusicDuration = ReadDouble(nameof(MinMusicDuration), 3.0);
 
+    static int _maxIslandWidth = Math.Clamp(Read(nameof(MaxIslandWidth), 460), 220, 800);
+    static bool _invertMediaGesture = ReadSwitch(nameof(InvertMediaGesture), false);
+    static bool _showTrackArtist = ReadSwitch(nameof(ShowTrackArtist), false);
+    static bool _interceptWindowsNotifications = ReadSwitch(nameof(InterceptWindowsNotifications), false);
+    static bool _notifyDnd = ReadSwitch(nameof(NotifyDnd), true);
+    static bool _notifyHeadphones = ReadSwitch(nameof(NotifyHeadphones), true);
+    static bool _notifyBattery = ReadSwitch(nameof(NotifyBattery), true);
+    static bool _notifyVpn = ReadSwitch(nameof(NotifyVpn), true);
+    static bool _notifyTimer = ReadSwitch(nameof(NotifyTimer), true);
+    static bool _notifyObs = ReadSwitch(nameof(NotifyObs), true);
+    static bool _notifyShelf = ReadSwitch(nameof(NotifyShelf), true);
+    static int _timerSound = Math.Clamp(Read(nameof(TimerSound), 0), 0, 5);
+    static bool _timerIntervalMode = ReadSwitch(nameof(TimerIntervalMode), false);
+    static bool _timerOvertime = ReadSwitch(nameof(TimerOvertime), true);
+
     public static bool Dots
     {
         get => _dots;
@@ -592,6 +607,90 @@ static class Settings
     {
         get => _minMusicDuration;
         set => Write(nameof(MinMusicDuration), _minMusicDuration = value);
+    }
+
+    public static int MaxIslandWidth
+    {
+        get => _maxIslandWidth;
+        set => Write(nameof(MaxIslandWidth), _maxIslandWidth = Math.Clamp(value, 220, 800));
+    }
+
+    public static bool InvertMediaGesture
+    {
+        get => _invertMediaGesture;
+        set => Write(nameof(InvertMediaGesture), _invertMediaGesture = value);
+    }
+
+    public static bool ShowTrackArtist
+    {
+        get => _showTrackArtist;
+        set => Write(nameof(ShowTrackArtist), _showTrackArtist = value);
+    }
+
+    public static bool InterceptWindowsNotifications
+    {
+        get => _interceptWindowsNotifications;
+        set => Write(nameof(InterceptWindowsNotifications), _interceptWindowsNotifications = value);
+    }
+
+    public static bool NotifyDnd
+    {
+        get => _notifyDnd;
+        set => Write(nameof(NotifyDnd), _notifyDnd = value);
+    }
+
+    public static bool NotifyHeadphones
+    {
+        get => _notifyHeadphones;
+        set => Write(nameof(NotifyHeadphones), _notifyHeadphones = value);
+    }
+
+    public static bool NotifyBattery
+    {
+        get => _notifyBattery;
+        set => Write(nameof(NotifyBattery), _notifyBattery = value);
+    }
+
+    public static bool NotifyVpn
+    {
+        get => _notifyVpn;
+        set => Write(nameof(NotifyVpn), _notifyVpn = value);
+    }
+
+    public static bool NotifyTimer
+    {
+        get => _notifyTimer;
+        set => Write(nameof(NotifyTimer), _notifyTimer = value);
+    }
+
+    public static bool NotifyObs
+    {
+        get => _notifyObs;
+        set => Write(nameof(NotifyObs), _notifyObs = value);
+    }
+
+    public static bool NotifyShelf
+    {
+        get => _notifyShelf;
+        set => Write(nameof(NotifyShelf), _notifyShelf = value);
+    }
+
+    public static int TimerSound
+    {
+        get => _timerSound;
+        set => Write(nameof(TimerSound), _timerSound = Math.Clamp(value, 0, 5));
+    }
+
+    public static bool TimerIntervalMode
+    {
+        get => _timerIntervalMode;
+        set => Write(nameof(TimerIntervalMode), _timerIntervalMode = value);
+    }
+
+    public static bool TimerOvertime
+    {
+        get => _timerOvertime;
+        set => Write(nameof(TimerOvertime), _timerOvertime = value);
     }
 
     static LyricSource Known(LyricSource sources) => (sources & LyricSource.All) == 0 ? LyricSource.Usual : sources & LyricSource.All;

@@ -195,7 +195,7 @@ public partial class MainWindow
             BeginTime = TimeSpan.FromMilliseconds(250),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         });
-        ShowTransient(View.Charge, ChargeSeconds);
+        if (Settings.NotifyBattery) ShowTransient(View.Charge, ChargeSeconds);
 
         var ease = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.7 };
         BoltTurn.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(-35, 0, Ms(520)) { BeginTime = FadeInDelay, EasingFunction = ease });
@@ -226,12 +226,15 @@ public partial class MainWindow
 
         string name = device.Name.Length > 0 ? device.Name : "Вывод звука";
         bool Passed(int mark) => was > mark && level <= mark;
-        if (announce && known)
-            ShowHeadset(name, HeadsetModel(device), level, low);
-        else if (announce)
-            Notify(icon, Brushes.White, device.Kind.Length > 0 ? device.Kind : "Аудиоустройство", name);
-        else if (known && (Passed(HeadsetLowPercent) || Passed(HeadsetCriticalPercent)))
-            ShowHeadset(name, HeadsetModel(device), level, true);
+        if (Settings.NotifyHeadphones)
+        {
+            if (announce && known)
+                ShowHeadset(name, HeadsetModel(device), level, low);
+            else if (announce)
+                Notify(icon, Brushes.White, device.Kind.Length > 0 ? device.Kind : "Аудиоустройство", name);
+            else if (known && (Passed(HeadsetLowPercent) || Passed(HeadsetCriticalPercent)))
+                ShowHeadset(name, HeadsetModel(device), level, true);
+        }
     }
 
     void PollDoNotDisturb()
@@ -244,7 +247,7 @@ public partial class MainWindow
 
         FocusIcon.Fill = FocusText.Foreground = quiet ? _indigo : _dim;
         FocusText.Text = quiet ? "Вкл." : "Выкл.";
-        ShowTransient(View.Focus, FocusSeconds);
+        if (Settings.NotifyDnd) ShowTransient(View.Focus, FocusSeconds);
 
         IEasingFunction ease = quiet ? new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 } : new CubicEase { EasingMode = EasingMode.EaseOut };
         var swing = new DoubleAnimation(quiet ? -80 : 0, quiet ? 0 : 24, Ms(quiet ? 620 : 420)) { BeginTime = FadeInDelay, EasingFunction = ease };

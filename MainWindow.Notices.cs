@@ -17,6 +17,14 @@ public partial class MainWindow
     {
         if (_ringing && !force) return;
 
+        if (icon == Glyph.Moon && !Settings.NotifyDnd) return;
+        if (icon == Glyph.Headphones && !Settings.NotifyHeadphones) return;
+        if (icon == Glyph.Battery && !Settings.NotifyBattery) return;
+        if ((icon == Glyph.Vpn || icon == Glyph.VpnOff) && !Settings.NotifyVpn) return;
+        if (icon == Glyph.Timer && !Settings.NotifyTimer) return;
+        if (icon == Glyph.Record && !Settings.NotifyObs) return;
+        if (icon == Glyph.Tray && !Settings.NotifyShelf) return;
+
         bool shown = _view == View.Notice;
         Color color = tint.Color;
         NoticeIcon.Kind = icon;
@@ -52,7 +60,7 @@ public partial class MainWindow
 
     void OnNetworkChanged(NetworkService.State was, NetworkService.State now)
     {
-        if (!Settings.Network) return;
+        if (!Settings.Network || !Settings.NotifyVpn) return;
 
         if (now.Vpn != was.Vpn)
         {

@@ -117,6 +117,7 @@ public partial class MainWindow
     void SkipByLean(double leant, double pace)
     {
         int way = -DragDirection(leant, pace, LeanToSkip);
+        if (Settings.InvertMediaGesture) way = -way;
         if (way == 0 || !IsMediaActive) return;
 
         RememberSkip(way);

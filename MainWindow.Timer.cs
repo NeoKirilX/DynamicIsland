@@ -127,6 +127,15 @@ public partial class MainWindow
     void OnTimerFinished()
     {
         string total = DescribeDuration(_countdown.Total);
+
+        if (Settings.TimerIntervalMode)
+        {
+            _countdown.Start(_countdown.Total);
+            _alarm.Ring();
+            Notify(Glyph.Bell, _orange, "Интервал таймера", "Новый цикл · " + total, 4, true);
+            return;
+        }
+
         StopTimer();
         _ringing = true;
         _alarm.Ring();
@@ -175,6 +184,23 @@ public partial class MainWindow
             chip.Foreground = picked ? _orange : Brushes.White;
             chip.FontWeight = picked ? FontWeights.SemiBold : FontWeights.Normal;
         }
+
+        TimerIntervalText.Text = Settings.TimerIntervalMode ? "Повтор: Вкл" : "Повтор: Выкл";
+        TimerIntervalText.Foreground = Settings.TimerIntervalMode ? _orange : (Brush)FindResource("Dim");
+        TimerOvertimeText.Text = Settings.TimerOvertime ? "Овертайм: Вкл" : "Овертайм: Выкл";
+        TimerOvertimeText.Foreground = Settings.TimerOvertime ? _orange : (Brush)FindResource("Dim");
+    }
+
+    void TimerInterval_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.TimerIntervalMode = !Settings.TimerIntervalMode;
+        SyncTimerPresets();
+    }
+
+    void TimerOvertime_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.TimerOvertime = !Settings.TimerOvertime;
+        SyncTimerPresets();
     }
 
     void TimerRow_Click(object sender, RoutedEventArgs e) => ShowPanel(_countdown.IsActive ? Panel.Timer : Panel.TimerSet);

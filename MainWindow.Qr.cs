@@ -93,6 +93,67 @@ public partial class MainWindow
         Notify(Glyph.Qr, Brushes.White, title, text.ReplaceLineEndings(" "), QrNoticeSeconds, true, open: link ? () => OpenLink(address!) : null);
     }
 
+    void OcrScreen_Click(object sender, RoutedEventArgs e) => ExtractOcr(false);
+
+    void OcrArea_Click(object sender, RoutedEventArgs e) => ExtractOcr(true);
+
+    async void OcrShelf_Click(object sender, RoutedEventArgs e)
+    {
+        var picture = _shelf.Items.FirstOrDefault(i => i.IsPhoto || (i.Picture != null));
+        if (picture == null || string.IsNullOrEmpty(picture.Path))
+        {
+            Notify(Glyph.Tray, _dim, "В полке нет картинок", "Добавьте изображение в полку и повторите", force: true);
+            return;
+        }
+
+        ShowPanel(Panel.None);
+        Notify(Glyph.Check, Brushes.White, "Распознавание...", System.IO.Path.GetFileName(picture.Path), 3);
+        string? text = await OcrService.ExtractFromFileAsync(picture.Path);
+        ShowOcrResult(text);
+    }
+
+    async void ExtractOcr(bool pickArea)
+    {
+        if (_readingQr) return;
+        _readingQr = true;
+        ShowPanel(Panel.None);
+        string? found = null;
+        try
+        {
+            await Task.Delay(MenuHideTime);
+            Int32Rect? area = pickArea ? await PickAreaAsync() : QrReader.Desktop;
+            if (area is { } chosen)
+            {
+                Notify(Glyph.Check, Brushes.White, "Распознавание текста...", "Обработка области...", 3);
+                found = await OcrService.ExtractFromAreaAsync(chosen);
+            }
+        }
+        catch (Exception ex)
+        {
+            App.Log(ex);
+        }
+        finally
+        {
+            _readingQr = false;
+        }
+
+        ShowOcrResult(found);
+    }
+
+    void ShowOcrResult(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            Notify(Glyph.Cross, _dim, "Текст не найден", "Не удалось распознать символы", force: true);
+            return;
+        }
+
+        string clean = text.Trim();
+        Copy(clean);
+        string preview = clean.Length > 80 ? clean[..80] + "…" : clean;
+        Notify(Glyph.Check, _green, "Текст скопирован", preview.ReplaceLineEndings(" "), 6, true);
+    }
+
     static bool Copy(string text)
     {
         try

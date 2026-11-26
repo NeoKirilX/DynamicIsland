@@ -185,7 +185,7 @@ public partial class MainWindow
             if (tile.Item.Path.EndsWith(".dni", StringComparison.OrdinalIgnoreCase))
             {
                 var (ok, msg) = ConfigService.ImportConfig(tile.Item.Path);
-                Notify(ok ? Glyph.Check : Glyph.Cross, Brushes.White, ok ? "Конфиг импортирован" : "Ошибка конфига", msg);
+                if (Settings.NotifyShelf) Notify(ok ? Glyph.Check : Glyph.Cross, Brushes.White, ok ? "Конфиг импортирован" : "Ошибка конфига", msg);
                 if (ok)
                 {
                     UpdateSwitches(false);

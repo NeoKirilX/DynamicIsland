@@ -50,14 +50,24 @@ sealed class MediaService
 
     public event Action? Changed;
 
-    public string Title => Capitalize(CleanTrackTitle(_title.Length > 0 ? _title : _barTitle));
+    public string RawTitle => Capitalize(CleanTrackTitle(_title.Length > 0 ? _title : _barTitle));
+    public string Title
+    {
+        get
+        {
+            string t = RawTitle;
+            if (Settings.ShowTrackArtist && Artist.Length > 0)
+                return $"{t} • {Artist}";
+            return t;
+        }
+    }
     public string Artist => _title.Length > 0 ? _artist : _barArtist;
     public string Name => Title.Length > 0 ? Title : SourceApp.Name(Source) is { Length: > 0 } app ? app : Untitled;
     public ImageSource? Art { get; private set; }
     public Color[] Palette { get; private set; } = CoverPalette.Plain;
     public Color Accent => Palette[0];
     public bool IsPlaying { get; private set; }
-    public bool HasTrack => _session != null && !IsSpotifyAd(Source, Title, _duration) && (Title.Length > 0 || (_noTimeline && _barSearched && IsLive));
+    public bool HasTrack => _session != null && !IsSpotifyAd(Source, RawTitle, _duration) && (RawTitle.Length > 0 || (_noTimeline && _barSearched && IsLive));
     public TimeSpan Duration => _duration;
     public bool HasBarPosition => _noTimeline && _barFound;
     public bool Seekable => _noTimeline ? _barFound : _duration.TotalSeconds >= 1;
@@ -80,7 +90,7 @@ sealed class MediaService
     }
 
     static readonly Regex TrackTagsPattern = new(
-        @"\s*[\(\[][^\)\]]*\b(?:official\s*(?:music|video|audio)?|video|audio|lyrics?|visuali[sz]er|remaster(?:ed)?|hd|hq|4k|8k|mv|feat(?:uring|\.)?|клип|премьера)[^\)\]]*[\)\]]",
+        @"\s*[\(\[][^\)\]]*\b(?:official\s*(?:music|video|audio)?|video|audio|lyrics?|visuali[sz]er|remaster(?:ed)?|hd|hq|4k|8k|mv|feat(?:uring|\.)?|клип|премьера|slowed(?:\s*\+\s*reverb)?|sped\s*up|speed\s*up|reverb|nightcore|hardstyle|phonk|remix|edit|prod(?:\s*by)?|замедленно|ускорено|ремикс|басс|хрип|басы)[^\)\]]*[\)\]]",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public static string CleanTrackTitle(string text)
