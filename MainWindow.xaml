@@ -1068,7 +1068,7 @@
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Obs_Click">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Dot"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Record"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Режим OBS (без захвата)"/>
                                         <local:Toggle x:Name="ObsSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>
@@ -1084,7 +1084,7 @@
                                 <Border Style="{StaticResource RowDivider}"/>
                                 <Button Style="{StaticResource RowButton}" Click="ExportConfig_Click">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Arrow"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Update"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Экспорт настроек (.dni)"/>
                                     </Grid>
                                 </Button>
@@ -1096,7 +1096,7 @@
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="ClearCache_Click">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Clear"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Cross"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Очистить кэш"/>
                                     </Grid>
                                 </Button>
