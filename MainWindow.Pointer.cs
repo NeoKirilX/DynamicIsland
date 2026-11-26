@@ -205,6 +205,7 @@ public partial class MainWindow
         int step = up ? 1 : -1;
         e.Handled = true;
         if (Native.IsCtrlDown) SwitchSource(-step);
+        else if (_view == View.TimerBig && _countdown.IsActive) { _countdown.Adjust(TimeSpan.FromMinutes(step)); UpdateTimer(); }
         else if (_view == View.TimerSet) SetMinutes(_setupMinutes + step);
         else if (_view == View.Look && LookOverflow > 0) ScrollLook(-step);
         else if (_view == View.Settings && SettingsOverflow > 0) ScrollSettings(-step);

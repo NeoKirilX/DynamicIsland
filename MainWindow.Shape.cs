@@ -52,6 +52,7 @@ public partial class MainWindow
     void UpdateTargets()
     {
         PillShape shape = ShapeOf(_view);
+        if (_view == View.Idle) IdleView.Width = HasIdleWeather ? 172 : 118;
         bool compact = shape.Height < CompactMaxHeight;
         double pull = RubberBand(_pull, MaxPull), lean = Math.Sign(_leanDrag) * RubberBand(Math.Abs(_leanDrag), MaxLean);
         bool dragging = _grab is Grab.Pull or Grab.Lean;
@@ -252,8 +253,8 @@ public partial class MainWindow
 
         IslandScale.ScaleX = IslandScale.ScaleY = scale;
         RootSize.ScaleX = RootSize.ScaleY = size;
-        RootMove.X = Settings.PosX;
-        RootMove.Y = _offsetY.Value + (_topGap.Value + Settings.PosY) / size;
+        RootMove.X = 0;
+        RootMove.Y = _offsetY.Value + _topGap.Value / size;
         RootLean.X = Math.Round(_leanX.Value * size * dpi) / (size * dpi);
         SharpenLyricCache(dpi);
 

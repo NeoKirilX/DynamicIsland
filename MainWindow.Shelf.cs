@@ -180,7 +180,24 @@ public partial class MainWindow
         _pressedTile = null;
         tile.ReleaseMouseCapture();
 
-        try { Process.Start(new ProcessStartInfo(tile.Item.Path) { UseShellExecute = true }); }
+        try
+        {
+            if (tile.Item.Path.EndsWith(".dni", StringComparison.OrdinalIgnoreCase))
+            {
+                var (ok, msg) = ConfigService.ImportConfig(tile.Item.Path);
+                Notify(ok ? Glyph.Check : Glyph.Cross, Brushes.White, ok ? "Конфиг импортирован" : "Ошибка конфига", msg);
+                if (ok)
+                {
+                    UpdateSwitches(false);
+                    RefreshLookPage();
+                    SyncAccent(false);
+                }
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo(tile.Item.Path) { UseShellExecute = true });
+            }
+        }
         catch (Exception ex)
         {
             App.Log(ex);

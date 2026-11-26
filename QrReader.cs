@@ -20,7 +20,7 @@ static class QrReader
         byte[] pixels = Capture(area.X, area.Y, width, height);
         var reader = new BarcodeReaderGeneric
         {
-            Options = new DecodingOptions { PossibleFormats = [BarcodeFormat.QR_CODE], TryHarder = true, TryInverted = true },
+            Options = new DecodingOptions { PossibleFormats = [BarcodeFormat.QR_CODE], TryHarder = true, TryInverted = true, CharacterSet = "UTF-8" },
         };
         return reader.Decode(new RGBLuminanceSource(pixels, width, height, RGBLuminanceSource.BitmapFormat.BGR32))?.Text;
     }

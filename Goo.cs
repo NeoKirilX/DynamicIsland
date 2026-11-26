@@ -123,7 +123,7 @@ public sealed class Goo : FrameworkElement
 
         double bevel = Math.Clamp(Math.Min(_pill.Width, _pill.Height) * BevelShare, MinBevelInset, MaxBevelInset);
         Geometry innerPill = Outline(_pill, _radius);
-        Geometry outerPill = Squircle.Of(_pill, _radius);
+        Geometry outerPill = Settings.Notch ? Squircle.Notch(_pill, _radius) : Squircle.Of(_pill, _radius);
         Geometry corePill = InsetOutline(_pill, _radius, RimWidth + bevel);
         if (_bubble.IsEmpty)
         {
@@ -294,7 +294,7 @@ public sealed class Goo : FrameworkElement
     static Geometry Outline(Rect rect, double radius)
     {
         (Rect box, double r) = Inside(rect, radius);
-        return Squircle.Of(box, r);
+        return Settings.Notch ? Squircle.Notch(box, r) : Squircle.Of(box, r);
     }
 
     static Geometry InsetOutline(Rect rect, double radius, double inset)
@@ -304,7 +304,7 @@ public sealed class Goo : FrameworkElement
         double dy = Math.Min(inset, rect.Height / 2 - 0.5);
         if (dx <= 0 || dy <= 0) return Geometry.Empty;
         rect.Inflate(-dx, -dy);
-        return Squircle.Of(rect, Math.Max(radius - inset, 0));
+        return Settings.Notch ? Squircle.Notch(rect, Math.Max(radius - inset, 0)) : Squircle.Of(rect, Math.Max(radius - inset, 0));
     }
 
     static (Rect Box, double Radius) Inside(Rect rect, double radius)

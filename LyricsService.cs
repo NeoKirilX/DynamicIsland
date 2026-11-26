@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -132,13 +134,116 @@ sealed partial class LyricsService
         return Array.ConvertAll(usual.Lines, line => new Line(line.Time * ratio, line.Text));
     }
 
+    static readonly string LyricsCacheDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DynamicIsland", "Cache", "Lyrics");
+
+    static string GetCachePath(string title, string artist)
+    {
+        string raw = $"{artist}_{title}".ToLowerInvariant();
+        char[] invalid = Path.GetInvalidFileNameChars();
+        string safe = new string(raw.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+        if (safe.Length > 80) safe = safe.Substring(0, 80);
+        return Path.Combine(LyricsCacheDir, safe + ".json");
+    }
+
+    static int[] GetSourceRatings()
+    {
+        try
+        {
+            var parts = Settings.LyricSourceRatings.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == Sources.Length)
+                return parts.Select(int.Parse).ToArray();
+        }
+        catch { }
+        return [10, 9, 8, 7, 6, 5];
+    }
+
+    static void AdjustRating(int rank, int delta)
+    {
+        try
+        {
+            var ratings = GetSourceRatings();
+            if (rank >= 0 && rank < ratings.Length)
+            {
+                ratings[rank] = Math.Clamp(ratings[rank] + delta, 1, 100);
+                Settings.LyricSourceRatings = string.Join(",", ratings);
+            }
+        }
+        catch { }
+    }
+
     async Task LoadAsync(string title, string artist, LyricSource sources, int version)
     {
+        string cacheFile = GetCachePath(title, artist);
+        if (File.Exists(cacheFile))
+        {
+            try
+            {
+                string json = await File.ReadAllTextAsync(cacheFile);
+                var cached = JsonSerializer.Deserialize<Candidate[]>(json);
+                if (cached != null && cached.Length > 0 && version == _requestVersion)
+                {
+                    _found = [cached];
+                    _stretchedFor = 0;
+                    IsPending = false;
+                    Changed?.Invoke();
+                    return;
+                }
+            }
+            catch { }
+        }
+
         var found = new Candidate[Sources.Length][];
         Array.Fill(found, []);
-        await Task.WhenAll(Sources.Select((source, rank) =>
-            sources.HasFlag((LyricSource)(1 << rank)) ? LoadFromAsync(source, rank, title, artist, version, found) : Task.CompletedTask));
-        if (version != _requestVersion) return;
+
+        var ratings = GetSourceRatings();
+        var prioritized = Enumerable.Range(0, Sources.Length)
+            .Where(rank => sources.HasFlag((LyricSource)(1 << rank)))
+            .OrderByDescending(rank => ratings[rank])
+            .ToList();
+
+        foreach (int rank in prioritized)
+        {
+            if (version != _requestVersion) return;
+            try
+            {
+                var candidateArray = await Task.Run(() => Sources[rank](title, artist));
+                if (candidateArray != null && candidateArray.Length > 0)
+                {
+                    found[rank] = candidateArray;
+                    _found = found;
+                    _stretchedFor = 0;
+                    Changed?.Invoke();
+
+                    int maxLines = candidateArray.Max(c => c.Lines.Length);
+                    if (maxLines >= 20)
+                    {
+                        AdjustRating(rank, +1);
+                        break;
+                    }
+                    else if (maxLines < 8)
+                    {
+                        AdjustRating(rank, -1);
+                    }
+                }
+            }
+            catch { }
+        }
+
+        if (_found.Length > 0 && _found.Any(s => s.Length > 0))
+        {
+            try
+            {
+                Directory.CreateDirectory(LyricsCacheDir);
+                var allCandidates = _found.SelectMany(s => s).ToArray();
+                if (allCandidates.Length > 0)
+                {
+                    string json = JsonSerializer.Serialize(allCandidates);
+                    await File.WriteAllTextAsync(cacheFile, json);
+                }
+            }
+            catch { }
+        }
 
         IsPending = false;
         Changed?.Invoke();

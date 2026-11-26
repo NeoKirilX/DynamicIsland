@@ -37,6 +37,16 @@ sealed class Countdown
         IsRunning = !IsRunning;
     }
 
+    public void Adjust(TimeSpan delta)
+    {
+        if (!IsActive) return;
+        TimeSpan current = Remaining + delta;
+        if (current < TimeSpan.FromSeconds(5)) current = TimeSpan.FromSeconds(5);
+        _remaining = current;
+        _resumedAt = DateTime.UtcNow;
+        if (current > Total) Total = current;
+    }
+
     public void Stop()
     {
         IsActive = IsRunning = false;

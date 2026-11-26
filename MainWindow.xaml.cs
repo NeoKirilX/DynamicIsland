@@ -189,7 +189,7 @@ public partial class MainWindow : Window
         _shelf.PictureLoaded += OnShelfPictureLoaded;
         _obs.Changed += OnObsChanged;
         _obs.Saved += OnRecordingSaved;
-        _weather.Changed += SyncWeather;
+        _weather.Changed += () => Dispatcher.InvokeAsync(SyncWeather);
 
         PrepareViews();
         PrepareWeatherHours();
@@ -296,6 +296,7 @@ public partial class MainWindow : Window
         SyncShelf();
         SyncRecord();
         SyncWeather();
+        Safely(PollSystemStats);
         SyncGlass(false);
         PlayIntro();
         _ticker.Start();
@@ -312,10 +313,19 @@ public partial class MainWindow : Window
         _obs.Start();
     }
 
-    void CenterOnScreen()
+    public void CenterOnScreen() => RepositionWindow();
+
+    public void RepositionWindow()
     {
-        Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
-        Top = 0;
+        double screenW = SystemParameters.PrimaryScreenWidth;
+        double baseLeft = Settings.IslandAlign switch
+        {
+            IslandAlign.Left => 20,
+            IslandAlign.Right => screenW - Width - 20,
+            _ => (screenW - Width) / 2
+        };
+        Left = baseLeft + Settings.PosX;
+        Top = Settings.Notch ? 0 : Settings.PosY;
         _glass.Place();
     }
 
@@ -432,6 +442,7 @@ public partial class MainWindow : Window
         _morphing = true;
         SwitchView(_views[target], MenuDirection(previous, target));
         SwitchBackdrop(target);
+        if (target == View.IdleBig) Safely(PollSystemStats);
         if (target == View.Place) BeginTyping();
         else if (previous == View.Place) EndTyping();
         MoveMediaSpot(previous, target, to);

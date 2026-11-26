@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using static DynamicIsland.Motion;
 
 namespace DynamicIsland;
@@ -148,10 +149,7 @@ public partial class MainWindow
 
     void Language_Click(object sender, RoutedEventArgs e)
     {
-        var langs = Localization.SupportedLanguages;
-        int idx = Array.IndexOf(langs, Settings.Language);
-        Settings.Language = langs[(idx + 1) % langs.Length];
-        UpdateSwitches(true);
+        OpenLanguageModal();
     }
 
     void ExportConfig_Click(object sender, RoutedEventArgs e)
@@ -453,7 +451,8 @@ public partial class MainWindow
 
         tiles.Visibility = Visibility.Visible;
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
-        var slide = new DoubleAnimation(open ? LookTilesHeight : 0, Ms(open ? 320 : 240)) { EasingFunction = ease };
+        double targetHeight = tiles == LyricChangeTiles ? 230 : LookTilesHeight;
+        var slide = new DoubleAnimation(open ? targetHeight : 0, Ms(open ? 320 : 240)) { EasingFunction = ease };
         slide.Completed += (_, _) =>
         {
             if (tiles != _openLookTiles) tiles.Visibility = Visibility.Collapsed;
@@ -532,11 +531,85 @@ public partial class MainWindow
         ApplyLook();
     }
 
+    int _baselinePosX = Settings.PosX;
+    int _baselinePosY = Settings.PosY;
+    DispatcherTimer? _coordConfirmTimer;
+    int _coordConfirmSeconds = 8;
+
+    void CheckCoordinateSafety()
+    {
+        if (Math.Abs(Settings.PosX - _baselinePosX) > 200 || Math.Abs(Settings.PosY - _baselinePosY) > 200)
+        {
+            ShowCoordConfirm();
+        }
+    }
+
+    void ShowCoordConfirm()
+    {
+        CoordConfirmBox.Visibility = Visibility.Visible;
+        _coordConfirmSeconds = 8;
+        CoordConfirmTimerText.Text = $"Откат через {_coordConfirmSeconds} с";
+
+        if (_coordConfirmTimer == null)
+        {
+            _coordConfirmTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _coordConfirmTimer.Tick += (_, _) =>
+            {
+                _coordConfirmSeconds--;
+                if (_coordConfirmSeconds <= 0)
+                {
+                    CoordConfirm_Cancel(null!, null!);
+                }
+                else
+                {
+                    CoordConfirmTimerText.Text = $"Откат через {_coordConfirmSeconds} с";
+                }
+            };
+        }
+        _coordConfirmTimer.Stop();
+        _coordConfirmTimer.Start();
+    }
+
+    void HideCoordConfirm()
+    {
+        _coordConfirmTimer?.Stop();
+        CoordConfirmBox.Visibility = Visibility.Collapsed;
+    }
+
+    void CoordConfirm_Accept(object sender, RoutedEventArgs e)
+    {
+        _baselinePosX = Settings.PosX;
+        _baselinePosY = Settings.PosY;
+        HideCoordConfirm();
+    }
+
+    void CoordConfirm_Cancel(object sender, RoutedEventArgs e)
+    {
+        HideCoordConfirm();
+        Settings.PosX = _baselinePosX;
+        Settings.PosY = _baselinePosY;
+        ApplyLook();
+    }
+
+    void Align_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.IslandAlign = (IslandAlign)AlignSegments.PickUnderPointer();
+        ApplyLook();
+    }
+
+    void ResetPos_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.PosX = 0;
+        Settings.PosY = 0;
+        ApplyLook();
+    }
+
     void PosXSlider_Changed(object? sender, EventArgs e)
     {
         Settings.PosX = (int)PosXSlider.Value;
         PosXText.Text = Settings.PosX + " px";
         ApplyLook();
+        CheckCoordinateSafety();
     }
 
     void PosYSlider_Changed(object? sender, EventArgs e)
@@ -544,6 +617,31 @@ public partial class MainWindow
         Settings.PosY = (int)PosYSlider.Value;
         PosYText.Text = Settings.PosY + " px";
         ApplyLook();
+        CheckCoordinateSafety();
+    }
+
+    void LyricSpeedSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.LyricAnimSpeed = (int)LyricSpeedSlider.Value;
+        LyricSpeedText.Text = Settings.LyricAnimSpeed + "%";
+    }
+
+    void LyricHeightSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.LyricAnimHeight = (int)LyricHeightSlider.Value;
+        LyricHeightText.Text = Settings.LyricAnimHeight + " px";
+    }
+
+    void LyricStaggerSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.LyricAnimStagger = (int)LyricStaggerSlider.Value;
+        LyricStaggerText.Text = Settings.LyricAnimStagger + " ms";
+    }
+
+    void LyricLeadSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.LyricLeadSec = (int)LyricLeadSlider.Value;
+        LyricLeadText.Text = (Settings.LyricLeadSec / 10.0).ToString("0.0") + " с";
     }
 
     void CenterPos_Click(object sender, RoutedEventArgs e)
@@ -565,6 +663,15 @@ public partial class MainWindow
         PosXSlider.Set(Settings.PosX, LookView.IsVisible);
         PosYSlider.Set(Settings.PosY, LookView.IsVisible);
         NotchSegments.Set(Settings.Notch ? 1 : 0, LookView.IsVisible);
+        AlignSegments.Set((int)Settings.IslandAlign, LookView.IsVisible);
+        LyricSpeedSlider.Set(Settings.LyricAnimSpeed, LookView.IsVisible);
+        LyricHeightSlider.Set(Settings.LyricAnimHeight, LookView.IsVisible);
+        LyricStaggerSlider.Set(Settings.LyricAnimStagger, LookView.IsVisible);
+        LyricLeadSlider.Set(Settings.LyricLeadSec, LookView.IsVisible);
+        LyricSpeedText.Text = Settings.LyricAnimSpeed + "%";
+        LyricHeightText.Text = Settings.LyricAnimHeight + " px";
+        LyricStaggerText.Text = Settings.LyricAnimStagger + " ms";
+        LyricLeadText.Text = (Settings.LyricLeadSec / 10.0).ToString("0.0") + " с";
         DotsSegments.Set(Settings.Dots ? 1 : 0, LookView.IsVisible);
         SeekStyleSegments.Set(Settings.LineBar ? 1 : 0, LookView.IsVisible);
         SeekHoverSegments.Set((int)Settings.SeekHover, LookView.IsVisible);
@@ -608,6 +715,103 @@ public partial class MainWindow
         RefreshLookPage();
         _userScale.Target = Settings.Scale / 100.0;
         _topGap.Target = Settings.Gap;
+        RepositionWindow();
         UpdateTargets();
+    }
+
+    void OpenLanguageModal()
+    {
+        PopulateLanguageList();
+        LanguageModal.Visibility = Visibility.Visible;
+        LanguageModal.Opacity = 0;
+        LanguageModalScale.ScaleX = LanguageModalScale.ScaleY = 0.5;
+
+        var ease = new BackEase { Amplitude = 0.3, EasingMode = EasingMode.EaseOut };
+        var scaleAnim = new DoubleAnimation(1.0, Ms(320)) { EasingFunction = ease };
+        var fadeAnim = new DoubleAnimation(1.0, Ms(200));
+
+        LanguageModal.BeginAnimation(OpacityProperty, fadeAnim);
+        LanguageModalScale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
+        LanguageModalScale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
+    }
+
+    void LanguageModal_Close(object sender, RoutedEventArgs e)
+    {
+        var ease = new CubicEase { EasingMode = EasingMode.EaseIn };
+        var scaleAnim = new DoubleAnimation(0.6, Ms(180)) { EasingFunction = ease };
+        var fadeAnim = new DoubleAnimation(0.0, Ms(160));
+        scaleAnim.Completed += (_, _) => LanguageModal.Visibility = Visibility.Collapsed;
+
+        LanguageModal.BeginAnimation(OpacityProperty, fadeAnim);
+        LanguageModalScale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
+        LanguageModalScale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
+    }
+
+    void PopulateLanguageList()
+    {
+        LanguageList.Children.Clear();
+        foreach (var (code, name) in Localization.Languages)
+        {
+            bool isCurrent = code == Settings.Language;
+            var btn = new Button
+            {
+                Height = 36,
+                Margin = new Thickness(0, 2, 0, 2),
+                Background = isCurrent ? new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF)) : Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Tag = code
+            };
+            var grid = new Grid { Margin = new Thickness(12, 0, 12, 0) };
+            var label = new TextBlock
+            {
+                Text = name,
+                FontSize = 13.5,
+                FontWeight = isCurrent ? FontWeights.SemiBold : FontWeights.Normal,
+                Foreground = isCurrent ? Brushes.White : (Brush)FindResource("Dim"),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            grid.Children.Add(label);
+
+            if (isCurrent)
+            {
+                var check = new Icon
+                {
+                    Kind = Glyph.Check,
+                    Width = 14,
+                    Height = 14,
+                    Fill = Brushes.White,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                grid.Children.Add(check);
+            }
+
+            btn.Content = grid;
+            btn.Click += (s, e) =>
+            {
+                string newLang = (string)((Button)s).Tag;
+                Settings.Language = newLang;
+                LanguageText.Text = newLang.ToUpperInvariant();
+                ApplyLocalization();
+                LanguageModal_Close(null!, null!);
+            };
+
+            var template = new ControlTemplate(typeof(Button));
+            var factory = new FrameworkElementFactory(typeof(Border));
+            factory.SetValue(Border.CornerRadiusProperty, new CornerRadius(10));
+            factory.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding("Background") { Source = btn });
+            var contentFactory = new FrameworkElementFactory(typeof(ContentPresenter));
+            factory.AppendChild(contentFactory);
+            template.VisualTree = factory;
+            btn.Template = template;
+
+            LanguageList.Children.Add(btn);
+        }
+    }
+
+    void ApplyLocalization()
+    {
+        UpdateSwitches(false);
+        RefreshLookPage();
     }
 }

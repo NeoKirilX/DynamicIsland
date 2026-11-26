@@ -31,6 +31,7 @@ static class QrService
                     Height = 320,
                     Margin = 2,
                     PureBarcode = false,
+                    CharacterSet = "UTF-8",
                 }
             };
 

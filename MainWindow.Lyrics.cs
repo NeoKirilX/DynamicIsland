@@ -57,8 +57,50 @@ public partial class MainWindow
 
     void TrackLyrics() => _lyrics.Track(Settings.Lyrics && _media.HasTrack ? _media.Title : "", _media.Artist, Settings.LyricSources);
 
+    LyricsService.Line[]? _cachedSourceLines, _cachedComboLines;
+    bool _cachedComboEnabled;
+    ComboCounterStyle _cachedComboStyle;
+    ComboSplitMode _cachedComboMode;
+    int _cachedComboMinRepeats;
+    int _cachedComboMinWordLen;
+    bool _cachedComboIgnoreAdlibs;
+    bool _cachedComboStripBrackets;
+
+    LyricsService.Line[] GetProcessedLyrics()
+    {
+        LyricsService.Line[] source = _lyrics.LinesFor(_media.Duration);
+        if (!Settings.ComboEnabled || source == null || source.Length == 0)
+            return source ?? [];
+
+        if (ReferenceEquals(source, _cachedSourceLines)
+            && _cachedComboLines != null
+            && _cachedComboEnabled == Settings.ComboEnabled
+            && _cachedComboStyle == Settings.ComboCounterStyle
+            && _cachedComboMode == Settings.ComboSplitMode
+            && _cachedComboMinRepeats == Settings.ComboMinRepeats
+            && _cachedComboMinWordLen == Settings.ComboMinWordLen
+            && _cachedComboIgnoreAdlibs == Settings.ComboIgnoreAdlibs
+            && _cachedComboStripBrackets == Settings.ComboStripBrackets)
+        {
+            return _cachedComboLines;
+        }
+
+        _cachedSourceLines = source;
+        _cachedComboEnabled = Settings.ComboEnabled;
+        _cachedComboStyle = Settings.ComboCounterStyle;
+        _cachedComboMode = Settings.ComboSplitMode;
+        _cachedComboMinRepeats = Settings.ComboMinRepeats;
+        _cachedComboMinWordLen = Settings.ComboMinWordLen;
+        _cachedComboIgnoreAdlibs = Settings.ComboIgnoreAdlibs;
+        _cachedComboStripBrackets = Settings.ComboStripBrackets;
+
+        return _cachedComboLines = ComboEngine.Process(source, _media.Duration);
+    }
+
     void OnLyricsChanged()
     {
+        _cachedSourceLines = null;
+        _cachedComboLines = null;
         _media.AssumeDuration(_lyrics.UsualLength);
         UpdateLyric();
     }
@@ -83,8 +125,7 @@ public partial class MainWindow
         if (_view == View.MediaBig) UpdatePlayerLyrics(snap);
         if (_view != View.Media) return;
 
-        LyricsService.Line[] lines = _lyrics.LinesFor(_media.Duration);
-        if (Settings.ComboEnabled) lines = ComboEngine.Process(lines, _media.Duration);
+        LyricsService.Line[] lines = GetProcessedLyrics();
         TimeSpan at = LyricTime;
         int index = LineAt(lines, at);
 
@@ -149,8 +190,7 @@ public partial class MainWindow
 
     void UpdatePlayerLyrics(bool snap)
     {
-        LyricsService.Line[] lines = _lyrics.LinesFor(_media.Duration);
-        if (Settings.ComboEnabled) lines = ComboEngine.Process(lines, _media.Duration);
+        LyricsService.Line[] lines = GetProcessedLyrics();
         if (!ReferenceEquals(lines, _playerLines))
         {
             _playerLines = lines;

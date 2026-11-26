@@ -71,6 +71,13 @@ public partial class MainWindow
         UpdateTimer();
     }
 
+    static string FormatTimerSeconds(int seconds)
+    {
+        if (seconds >= 3600)
+            return $"{seconds / 3600}:{(seconds % 3600) / 60:00}:{seconds % 60:00}";
+        return $"{seconds / 60}:{seconds % 60:00}";
+    }
+
     void UpdateTimer()
     {
         if (!_countdown.IsActive) return;
@@ -87,7 +94,7 @@ public partial class MainWindow
         int seconds = (int)Math.Ceiling(left.TotalSeconds);
         if (seconds == _shownSeconds) return;
         _shownSeconds = seconds;
-        TimerText.Text = BubbleText.Text = BigTimer.Text = MenuTimer.Text = $"{seconds / 60}:{seconds % 60:00}";
+        TimerText.Text = BubbleText.Text = BigTimer.Text = MenuTimer.Text = FormatTimerSeconds(seconds);
 
         SetUrgent(seconds <= UrgentSeconds);
         if (_urgent && _countdown.IsRunning) PulseTimer();

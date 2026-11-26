@@ -46,4 +46,45 @@ static class Squircle
         outline.Freeze();
         return outline;
     }
+
+    public static Geometry Notch(Rect rect, double radius, double earSize = 14)
+    {
+        double x = rect.X;
+        double y = rect.Y;
+        double w = rect.Width;
+        double h = rect.Height;
+        if (w <= 0.01 || h <= 0.01) return Geometry.Empty;
+
+        double r = Math.Min(radius, Math.Min(w / 2, h / 2));
+        double earW = earSize;
+        double earH = Math.Min(h * 0.45, earSize);
+        double topBleed = 4.0;
+        double topY = y - topBleed;
+
+        var outline = new StreamGeometry();
+        using (StreamGeometryContext g = outline.Open())
+        {
+            g.BeginFigure(new Point(x - earW, topY), true, true);
+            g.LineTo(new Point(x + w + earW, topY), true, false);
+            g.BezierTo(
+                new Point(x + w + earW * 0.45, topY),
+                new Point(x + w, y + earH * 0.45),
+                new Point(x + w, y + earH),
+                true, true
+            );
+            g.LineTo(new Point(x + w, y + h - r), true, false);
+            g.ArcTo(new Point(x + w - r, y + h), new Size(r, r), 0, false, SweepDirection.Clockwise, true, true);
+            g.LineTo(new Point(x + r, y + h), true, false);
+            g.ArcTo(new Point(x, y + h - r), new Size(r, r), 0, false, SweepDirection.Clockwise, true, true);
+            g.LineTo(new Point(x, y + earH), true, false);
+            g.BezierTo(
+                new Point(x, y + earH * 0.45),
+                new Point(x - earW * 0.45, topY),
+                new Point(x - earW, topY),
+                true, true
+            );
+        }
+        outline.Freeze();
+        return outline;
+    }
 }

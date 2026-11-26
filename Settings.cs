@@ -76,6 +76,13 @@ enum LyricAlign
     Right,
 }
 
+enum IslandAlign
+{
+    Center,
+    Left,
+    Right,
+}
+
 enum MatrixDensity
 {
     Sparse,
@@ -154,6 +161,8 @@ static class Settings
     static int _posX = Read(nameof(PosX), 0);
     static int _posY = Read(nameof(PosY), 0);
     static bool _notch = ReadSwitch(nameof(Notch), false);
+    static IslandAlign _islandAlign = (IslandAlign)Math.Clamp(Read(nameof(IslandAlign), 0), 0, (int)IslandAlign.Right);
+    static string _lyricSourceRatings = Read(nameof(LyricSourceRatings), "10,9,8,7,6,5");
 
     // Equalizer properties
     static bool _compactEqualizer = ReadSwitch(nameof(CompactEqualizer), false);
@@ -433,6 +442,18 @@ static class Settings
     {
         get => _notch;
         set => Write(nameof(Notch), _notch = value);
+    }
+
+    public static IslandAlign IslandAlign
+    {
+        get => _islandAlign;
+        set => Write(nameof(IslandAlign), (int)(_islandAlign = value));
+    }
+
+    public static string LyricSourceRatings
+    {
+        get => _lyricSourceRatings;
+        set => Write(nameof(LyricSourceRatings), _lyricSourceRatings = value);
     }
 
     public static bool CompactEqualizer

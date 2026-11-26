@@ -1326,12 +1326,19 @@
                                         <local:Segments x:Name="NotchSegments" Style="{StaticResource RowSegments}" Labels="Пилюля|Чёлка"/>
                                     </Grid>
                                 </Button>
+                                <Button Style="{StaticResource RowButton}" Click="Align_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Location"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Выравнивание"/>
+                                        <local:Segments x:Name="AlignSegments" Style="{StaticResource RowSegments}" Labels="Слева|Центр|Справа"/>
+                                    </Grid>
+                                </Button>
                                 <Button x:Name="PosXRow" Style="{StaticResource RowButton}">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Pointer"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Позиция X"/>
                                         <local:Scrubber x:Name="PosXSlider" Style="{StaticResource RowSlider}"
-                                                        Minimum="-800" Maximum="800" Step="10" Changed="PosXSlider_Changed"/>
+                                                        Minimum="-1920" Maximum="1920" Step="10" Changed="PosXSlider_Changed"/>
                                         <local:Digits x:Name="PosXText" Foreground="{StaticResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
@@ -1341,17 +1348,48 @@
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Gap"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Позиция Y"/>
                                         <local:Scrubber x:Name="PosYSlider" Style="{StaticResource RowSlider}"
-                                                        Minimum="0" Maximum="600" Step="5" Changed="PosYSlider_Changed"/>
+                                                        Minimum="0" Maximum="1200" Step="5" Changed="PosYSlider_Changed"/>
                                         <local:Digits x:Name="PosYText" Foreground="{StaticResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
-                                <Button Style="{StaticResource RowButton}" Click="CenterPos_Click">
+                                <Button Style="{StaticResource RowButton}" Click="ResetPos_Click">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Location"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Центрировать по центру"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Back"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Сбросить смещение (0, 0)"/>
                                     </Grid>
                                 </Button>
+                                <Border x:Name="CoordConfirmBox" Visibility="Collapsed" Background="#F2181822" CornerRadius="14" Padding="12,10" Margin="6,4,6,6" BorderBrush="#33FFFFFF" BorderThickness="1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Применить позицию?" FontWeight="SemiBold" FontSize="12.5" Foreground="White"/>
+                                            <TextBlock x:Name="CoordConfirmTimerText" Text="Откат через 8 с" FontSize="11" Foreground="{StaticResource Dim}"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Click="CoordConfirm_Accept" Margin="0,0,6,0" Background="#2B8256" BorderThickness="0">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="12,4">
+                                                        <TextBlock Text="Да" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        <Button Grid.Column="2" Click="CoordConfirm_Cancel" Background="#33FFFFFF" BorderThickness="0">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="12,4">
+                                                        <TextBlock Text="Нет" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </Grid>
+                                </Border>
                                 <Button Style="{StaticResource RowButton}" Click="Glass_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
@@ -1445,17 +1483,45 @@
                                     </Grid>
                                 </Button>
                                 <Border x:Name="LyricChangeTiles" Height="0" Visibility="Collapsed" ClipToBounds="True">
-                                    <UniformGrid x:Name="LyricChangeStrip" Rows="1" Height="64" Margin="6,2,6,0" VerticalAlignment="Top" Opacity="0">
-                                        <RadioButton Style="{StaticResource Tile}" Tag="Плавно" Click="LyricChangeTile_Click">
-                                            <local:LyricPreview Change="Smooth"/>
-                                        </RadioButton>
-                                        <RadioButton Style="{StaticResource Tile}" Tag="Волна" Click="LyricChangeTile_Click">
-                                            <local:LyricPreview Change="Wave"/>
-                                        </RadioButton>
-                                        <RadioButton Style="{StaticResource Tile}" Tag="Барабан" Click="LyricChangeTile_Click">
-                                            <local:LyricPreview Change="Drum"/>
-                                        </RadioButton>
-                                    </UniformGrid>
+                                    <StackPanel x:Name="LyricChangeContainer" Opacity="0">
+                                        <UniformGrid x:Name="LyricChangeStrip" Rows="1" Height="64" Margin="6,2,6,0">
+                                            <RadioButton Style="{StaticResource Tile}" Tag="Плавно" Click="LyricChangeTile_Click">
+                                                <local:LyricPreview Change="Smooth"/>
+                                            </RadioButton>
+                                            <RadioButton Style="{StaticResource Tile}" Tag="Волна" Click="LyricChangeTile_Click">
+                                                <local:LyricPreview Change="Wave"/>
+                                            </RadioButton>
+                                            <RadioButton Style="{StaticResource Tile}" Tag="Барабан" Click="LyricChangeTile_Click">
+                                                <local:LyricPreview Change="Drum"/>
+                                            </RadioButton>
+                                        </UniformGrid>
+                                        <StackPanel Margin="6,6,6,6">
+                                            <Grid Height="34">
+                                                <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
+                                                <TextBlock Style="{StaticResource RowLabel}" Text="Скорость"/>
+                                                <local:Scrubber x:Name="LyricSpeedSlider" Style="{StaticResource RowSlider}" Minimum="50" Maximum="200" Step="5" Changed="LyricSpeedSlider_Changed"/>
+                                                <local:Digits x:Name="LyricSpeedText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <Grid Height="34">
+                                                <local:Icon Style="{StaticResource RowIcon}" Kind="Expand"/>
+                                                <TextBlock Style="{StaticResource RowLabel}" Text="Высота вылета"/>
+                                                <local:Scrubber x:Name="LyricHeightSlider" Style="{StaticResource RowSlider}" Minimum="15" Maximum="80" Step="5" Changed="LyricHeightSlider_Changed"/>
+                                                <local:Digits x:Name="LyricHeightText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <Grid Height="34">
+                                                <local:Icon Style="{StaticResource RowIcon}" Kind="Pulse"/>
+                                                <TextBlock Style="{StaticResource RowLabel}" Text="Задержка букв"/>
+                                                <local:Scrubber x:Name="LyricStaggerSlider" Style="{StaticResource RowSlider}" Minimum="10" Maximum="60" Step="2" Changed="LyricStaggerSlider_Changed"/>
+                                                <local:Digits x:Name="LyricStaggerText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <Grid Height="34">
+                                                <local:Icon Style="{StaticResource RowIcon}" Kind="Clock"/>
+                                                <TextBlock Style="{StaticResource RowLabel}" Text="Пред-показ строк"/>
+                                                <local:Scrubber x:Name="LyricLeadSlider" Style="{StaticResource RowSlider}" Minimum="0" Maximum="9" Step="1" Changed="LyricLeadSlider_Changed"/>
+                                                <local:Digits x:Name="LyricLeadText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </StackPanel>
                                 </Border>
                                 <Button Style="{StaticResource RowButton}" Click="HoverRow_Click">
                                     <Grid>
@@ -1652,6 +1718,38 @@
                         <Button Style="{StaticResource ChipButton}" Height="40" FontSize="13.5" FontWeight="SemiBold"
                                 Margin="2,8,2,0" Content="Создать из буфера" Click="QrGenerate_Click"/>
                     </StackPanel>
+                </Grid>
+
+                <Grid x:Name="LanguageModal" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Top" Width="310" Height="410" Margin="0,8,0,0">
+                    <Grid.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="LanguageModalScale" CenterX="155" CenterY="205"/>
+                        </TransformGroup>
+                    </Grid.RenderTransform>
+                    <Border Background="#F2121218" CornerRadius="28" BorderBrush="#33FFFFFF" BorderThickness="1" ClipToBounds="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="50"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="20,0,16,0">
+                                <TextBlock Text="Язык интерфейса" FontSize="15" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                                <Button Click="LanguageModal_Close" HorizontalAlignment="Right" VerticalAlignment="Center" Width="28" Height="28" Background="#26FFFFFF" BorderThickness="0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="14">
+                                                <local:Icon Kind="Cross" Width="10" Height="10" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                            <Border Grid.Row="0" Height="1" Background="#1AFFFFFF" VerticalAlignment="Bottom"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden" Margin="10,6,10,10">
+                                <StackPanel x:Name="LanguageList"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Grid>
 

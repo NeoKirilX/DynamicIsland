@@ -1,4 +1,7 @@
 using System.IO;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Windows.Foundation;
@@ -47,25 +50,55 @@ sealed class MediaService
 
     public event Action? Changed;
 
-    public string Title => Capitalize(_title.Length > 0 ? _title : _barTitle);
+    public string Title => Capitalize(CleanTrackTitle(_title.Length > 0 ? _title : _barTitle));
     public string Artist => _title.Length > 0 ? _artist : _barArtist;
     public string Name => Title.Length > 0 ? Title : SourceApp.Name(Source) is { Length: > 0 } app ? app : Untitled;
     public ImageSource? Art { get; private set; }
     public Color[] Palette { get; private set; } = CoverPalette.Plain;
     public Color Accent => Palette[0];
     public bool IsPlaying { get; private set; }
-    public bool HasTrack => _session != null && (Title.Length > 0 || (_noTimeline && _barSearched && IsLive));
+    public bool HasTrack => _session != null && !IsSpotifyAd(Source, Title, _duration) && (Title.Length > 0 || (_noTimeline && _barSearched && IsLive));
     public TimeSpan Duration => _duration;
     public bool HasBarPosition => _noTimeline && _barFound;
     public bool Seekable => _noTimeline ? _barFound : _duration.TotalSeconds >= 1;
 
     public void RaisePlayer() => SourceApp.BringToFront(Source, Title);
 
+    static bool IsSpotifyAd(string source, string title, TimeSpan duration)
+    {
+        if (source.Contains("Spotify", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.Equals(title, "Advertisement", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(title, "Spotify", StringComparison.OrdinalIgnoreCase) ||
+                (Math.Abs(duration.TotalSeconds - 30.0) < 0.8 && duration.TotalSeconds > 28.5) ||
+                (Math.Abs(duration.TotalSeconds - 15.0) < 0.8 && duration.TotalSeconds > 13.5))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static readonly Regex TrackTagsPattern = new(
+        @"\s*[\(\[][^\)\]]*\b(?:official\s*(?:music|video|audio)?|video|audio|lyrics?|visuali[sz]er|remaster(?:ed)?|hd|hq|4k|8k|mv|feat(?:uring|\.)?|клип|премьера)[^\)\]]*[\)\]]",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    public static string CleanTrackTitle(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "";
+        string cleaned = TrackTagsPattern.Replace(text, "");
+        cleaned = Regex.Replace(cleaned, @"[\(\[]\s*[\)\]]", "");
+        cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim(' ', '-', '—', '–', '|');
+        return cleaned.Length > 0 ? cleaned : text;
+    }
+
     static string Capitalize(string text)
     {
         if (!Settings.CapitalizeTitle || string.IsNullOrEmpty(text)) return text;
-        if (char.IsUpper(text[0])) return text;
-        return char.ToUpper(text[0]) + text.Substring(1);
+        int i = 0;
+        while (i < text.Length && !char.IsLetter(text[i])) i++;
+        if (i >= text.Length || char.IsUpper(text[i])) return text;
+        return text[..i] + char.ToUpper(text[i]) + text[(i + 1)..];
     }
 
     bool IsShortSound(Session session)
@@ -74,7 +107,12 @@ sealed class MediaService
         {
             var timeline = session.GetTimelineProperties();
             double seconds = (timeline.EndTime - timeline.StartTime).TotalSeconds;
-            return seconds > 0 && seconds < Settings.MinMusicDuration;
+            if (seconds > 0 && seconds < Settings.MinMusicDuration) return true;
+            if (session.SourceAppUserModelId.Contains("Spotify", StringComparison.OrdinalIgnoreCase))
+            {
+                if (Math.Abs(seconds - 30.0) < 0.8 || Math.Abs(seconds - 15.0) < 0.8) return true;
+            }
+            return false;
         }
         catch { return false; }
     }
@@ -315,6 +353,12 @@ sealed class MediaService
                 if (version != _refreshVersion) return;
             }
 
+            if (art == null && title.Length > 0)
+            {
+                (art, palette) = await FetchFallbackCoverAsync(title, properties.Artist ?? "");
+                if (version != _refreshVersion) return;
+            }
+
             _title = title;
             _artist = properties.Artist ?? "";
             if (art != null || !sameTrack)
@@ -348,6 +392,87 @@ sealed class MediaService
         {
             return (null, CoverPalette.Plain);
         }
+    }
+
+    static readonly HttpClient WebCoverClient = new() { Timeout = TimeSpan.FromSeconds(5) };
+    static readonly string CoverCacheDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DynamicIsland", "Cache", "Covers");
+
+    static async Task<(ImageSource? Art, Color[] Palette)> FetchFallbackCoverAsync(string title, string artist)
+    {
+        try
+        {
+            Directory.CreateDirectory(CoverCacheDir);
+            string safeKey = new string($"{artist}_{title}".ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
+            if (safeKey.Length > 60) safeKey = safeKey[..60];
+            string cachePath = Path.Combine(CoverCacheDir, safeKey + ".jpg");
+
+            if (File.Exists(cachePath))
+            {
+                byte[] bytes = await File.ReadAllBytesAsync(cachePath);
+                using var ms = new MemoryStream(bytes);
+                return CoverPalette.Decode(ms);
+            }
+
+            string clean = CleanTrackTitle(title);
+            string query = Uri.EscapeDataString($"{artist} {clean}".Trim());
+
+            string? coverUrl = null;
+            try
+            {
+                string itunesUrl = $"https://itunes.apple.com/search?term={query}&entity=song&limit=1";
+                using var itunesResp = await WebCoverClient.GetAsync(itunesUrl);
+                if (itunesResp.IsSuccessStatusCode)
+                {
+                    using var json = await JsonDocument.ParseAsync(await itunesResp.Content.ReadAsStreamAsync());
+                    if (json.RootElement.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                    {
+                        var item = results[0];
+                        if (item.TryGetProperty("artworkUrl100", out var artProp))
+                        {
+                            coverUrl = artProp.GetString()?.Replace("100x100bb", "600x600bb");
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            if (string.IsNullOrEmpty(coverUrl))
+            {
+                try
+                {
+                    string deezerUrl = $"https://api.deezer.com/search?limit=1&q={query}";
+                    using var deezerResp = await WebCoverClient.GetAsync(deezerUrl);
+                    if (deezerResp.IsSuccessStatusCode)
+                    {
+                        using var json = await JsonDocument.ParseAsync(await deezerResp.Content.ReadAsStreamAsync());
+                        if (json.RootElement.TryGetProperty("data", out var data) && data.GetArrayLength() > 0)
+                        {
+                            var item = data[0];
+                            if (item.TryGetProperty("album", out var album))
+                            {
+                                if (album.TryGetProperty("cover_xl", out var cXl)) coverUrl = cXl.GetString();
+                                else if (album.TryGetProperty("cover_big", out var cBig)) coverUrl = cBig.GetString();
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            if (!string.IsNullOrEmpty(coverUrl))
+            {
+                byte[] imgData = await WebCoverClient.GetByteArrayAsync(coverUrl);
+                if (imgData.Length > 0)
+                {
+                    try { await File.WriteAllBytesAsync(cachePath, imgData); } catch { }
+                    using var ms = new MemoryStream(imgData);
+                    return CoverPalette.Decode(ms);
+                }
+            }
+        }
+        catch { }
+        return (null, CoverPalette.Plain);
     }
 
     bool ReadPlayback()

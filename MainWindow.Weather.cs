@@ -47,6 +47,7 @@ public partial class MainWindow
         bool hasWeather = Settings.Weather && now != null;
         InfoWeatherRow.SetVisible(now != null);
         IdleWeatherBox.SetVisible(hasWeather);
+        IdleView.Width = hasWeather ? 172 : 118;
         WeatherNow.SetVisible(now != null);
         WeatherHours.SetVisible(now != null);
         WeatherSpark.SetVisible(now != null && now.Hours.Length >= 2);

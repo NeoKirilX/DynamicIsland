@@ -155,6 +155,15 @@ public partial class MainWindow
         else if (_powerKnown && !plugged && _lastPlugged)
         {
             SoundService.Play("unplugged");
+            ShowCharging(percent);
+        }
+        else if (_powerKnown && percent == 100 && _lastBatteryPercent < 100 && plugged)
+        {
+            SoundService.Play("battery_full");
+        }
+        else if (_powerKnown && percent <= 10 && _lastBatteryPercent > 10)
+        {
+            SoundService.Play("battery_critical");
         }
         else if (_powerKnown && percent <= HeadsetLowPercent && _lastBatteryPercent > HeadsetLowPercent)
         {

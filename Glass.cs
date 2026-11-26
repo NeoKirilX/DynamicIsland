@@ -12,7 +12,7 @@ namespace DynamicIsland;
 
 sealed class Glass
 {
-    const double FlattenTolerance = 0.2;
+    const double FlattenTolerance = 0.75;
     const float CoreBlurSigma = 16f;
     const float CoreSaturation = 1.65f;
     const float CoreExposure = -0.28f;
