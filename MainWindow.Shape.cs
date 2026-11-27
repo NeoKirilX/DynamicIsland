@@ -267,9 +267,9 @@ public partial class MainWindow
         {
             _clipRect = pill;
             _clipRadius = r;
-            Geometry pillOutline = Squircle.Of(pill, r);
+            Geometry pillOutline = Settings.Notch ? Squircle.Notch(pill, r) : Squircle.Of(pill, r);
             (Rect inside, double insideRadius) = Body.PillInside;
-            Geometry insideClip = inside.IsEmpty ? pillOutline : Squircle.Of(inside, insideRadius);
+            Geometry insideClip = inside.IsEmpty ? pillOutline : (Settings.Notch ? Squircle.Notch(inside, insideRadius) : Squircle.Of(inside, insideRadius));
             Host.Clip = Shared.Clip = pillOutline;
             Backdrops.Clip = GestureHints.Clip = insideClip;
             Shadow.Data = outer ?? pillOutline;
