@@ -117,25 +117,29 @@ public partial class MainWindow
 
     void SyncRim()
     {
+        Body.SyncRimState(Settings.Rim);
         Color[]? palette = ContextualRimPalette();
         if (SamePalette(_rimPalette, palette)) return;
         _rimPalette = palette;
         Body.Tint(palette, TintTime);
+        StartShapeLoop();
     }
 
     Color[]? ContextualRimPalette()
     {
         if (!Settings.Rim) return null;
+        if (_media.HasTrack && (_cover != null || Settings.Accent != null))
+        {
+            return Settings.Accent is { } own ? CoverPalette.Around(own) : _media.Palette;
+        }
         return _view switch
         {
-            View.Media or View.Toast or View.MediaBig when _media.HasTrack && (_cover != null || Settings.Accent != null)
-                => Settings.Accent is { } own ? CoverPalette.Around(own) : _media.Palette,
             View.Timer or View.TimerBig or View.TimerSet => [_timerTint.Color],
             View.Record or View.RecordBig => [_recordTint.Color],
             View.Weather or View.Place when _weather.Now is { } report => [WeatherColor(report.Sky, report.Night)],
             View.Charge => [_green.Color],
             View.Focus when _doNotDisturb == true => [_indigo.Color],
-            _ => null,
+            _ => Settings.Accent is { } acc ? CoverPalette.Around(acc) : null,
         };
     }
 
@@ -212,6 +216,9 @@ public partial class MainWindow
             float peak = _audio.Peak();
             level = peak < 0 ? PeakFallback : peak;
         }
+
+        double beat = bands != null ? Math.Max(bands[0], bands[1]) : level;
+        Body.SetBeat(playing ? beat : 0);
 
         bool moving = Eq.Tick(bands, level, playing, now, dt);
         moving |= Settings.Backdrop switch

@@ -298,8 +298,9 @@ public partial class MainWindow : Window
 
     async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        ClampPositionsToScreen();
         CenterOnScreen();
-        SystemEvents.DisplaySettingsChanged += (_, _) => Dispatcher.InvokeAsync(CenterOnScreen);
+        SystemEvents.DisplaySettingsChanged += (_, _) => Dispatcher.InvokeAsync(() => { ClampPositionsToScreen(); CenterOnScreen(); UpdateTargets(); });
         UpdateClock();
         UpdateSwitches(false);
         RefreshLookPage();
@@ -325,20 +326,59 @@ public partial class MainWindow : Window
         _obs.Start();
     }
 
+    public void ClampPositionsToScreen()
+    {
+        double screenW = SystemParameters.PrimaryScreenWidth;
+        double screenH = SystemParameters.PrimaryScreenHeight;
+        double size = _userScale != null ? Math.Max(_userScale.Value, MinScale) : 1;
+        double pillW = (_width != null ? Math.Max(_width.Value, MinPillSize) : 172) * size;
+        double pillH = (_height != null ? Math.Max(_height.Value, MinPillSize) : 34) * size;
+
+        int minX, maxX;
+        switch (Settings.IslandAlign)
+        {
+            case IslandAlign.Left:
+                minX = -20;
+                maxX = (int)Math.Max(screenW - 20 - pillW, -20);
+                break;
+            case IslandAlign.Right:
+                minX = (int)Math.Min(-(screenW - 20 - pillW), 20);
+                maxX = 20;
+                break;
+            default: // Center
+                int maxRange = (int)Math.Max((screenW - pillW) / 2.0, 0);
+                minX = -maxRange;
+                maxX = maxRange;
+                break;
+        }
+
+        Settings.PosX = Math.Clamp(Settings.PosX, minX, maxX);
+        Settings.PosY = Math.Clamp(Settings.PosY, 0, (int)Math.Max(screenH - pillH - 20, 0));
+
+        if (PosXSlider != null)
+        {
+            PosXSlider.Minimum = minX;
+            PosXSlider.Maximum = maxX;
+            PosXSlider.Set(Settings.PosX, LookView?.IsVisible ?? false);
+        }
+        if (PosYSlider != null)
+        {
+            PosYSlider.Minimum = 0;
+            PosYSlider.Maximum = (int)Math.Max(screenH - pillH - 20, 0);
+            PosYSlider.Set(Settings.PosY, LookView?.IsVisible ?? false);
+        }
+    }
+
     public void CenterOnScreen() => RepositionWindow();
 
     public void RepositionWindow()
     {
         double screenW = SystemParameters.PrimaryScreenWidth;
-        double w = _width != null ? Math.Max(_width.Value, MinPillSize) : 172;
-        double size = _userScale != null ? Math.Max(_userScale.Value, MinScale) : 1;
-        double pillW = w * size;
-
         double targetLeft = Settings.IslandAlign switch
         {
-            IslandAlign.Left => (20 + Settings.PosX) + (pillW / 2) - (Width / 2),
-            IslandAlign.Right => (screenW - 20 + Settings.PosX) - (pillW / 2) - (Width / 2),
-            _ => (screenW - Width) / 2 + Settings.PosX
+            IslandAlign.Left => (20 + Settings.PosX) - (Width - HostWidth) / 2.0,
+            IslandAlign.Right => (screenW - 20 + Settings.PosX) - Width + (Width - HostWidth) / 2.0,
+            _ => (screenW - Width) / 2.0 + Settings.PosX
         };
         Left = targetLeft;
         Top = Settings.Notch ? 0 : Settings.PosY;

@@ -55,12 +55,13 @@ public partial class MainWindow
         PillShape shape = ShapeOf(_view);
         if (_view == View.Idle) IdleView.Width = HasIdleWeather ? 172 : 118;
         bool compact = shape.Height < CompactMaxHeight;
-        double pull = RubberBand(_pull, MaxPull), lean = Math.Sign(_leanDrag) * RubberBand(Math.Abs(_leanDrag), MaxLean);
+        double pull = RubberBand(_pull, MaxPull);
+        double leanExtra = _grab == Grab.Lean && IsMediaActive ? Math.Clamp(Math.Abs(_leanDrag) * 0.85, 0, 48) : 0;
         bool dragging = _grab is Grab.Pull or Grab.Lean;
-        _width.Target = shape.Width + pull * PullWidening + Math.Abs(lean) * LeanStretch;
+        _width.Target = shape.Width + pull * PullWidening + leanExtra;
         _height.Target = shape.Height + pull;
         _radius.Target = shape.Radius + pull * PullRounding;
-        _leanX.Target = lean;
+        _leanX.Target = _grab == Grab.Lean ? Math.Sign(_leanDrag) * (leanExtra / 2.0) : 0;
         if (MediaSpots.TryGetValue(_view, out MediaSpot spot))
         {
             _coverTop.Target = spot.CoverTop + pull / 2;
@@ -72,7 +73,7 @@ public partial class MainWindow
         UpdatePullHandleTargets();
         _topGap.Target = Settings.Notch ? 0 : Settings.Gap;
         _offsetY.Target = (_hiddenByFullscreen || _sentAway) && !_ringing ? -(shape.Height + OffscreenMargin + Settings.Gap * 100.0 / Settings.Scale) : 0;
-        _scale.Target = dragging ? 1 : _pressed ? (compact ? PressedScale : PressedOpenScale) : _hovered && compact ? HoverScale : 1;
+        _scale.Target = dragging ? 1 : _pressed ? (compact ? PressedScale : PressedOpenScale) : 1;
         _bubbleScale.Target = _bubblePressed ? PressedScale : _bubbleHovered ? HoverScale : 1;
         StartShapeLoop();
     }
@@ -221,9 +222,10 @@ public partial class MainWindow
     {
         bool moving = false;
         foreach (Spring spring in _springs) moving |= spring.Advance(dt);
+        moving |= Body.Advance(dt);
         ApplyShape();
         if (!moving) EndMorph();
-        return moving || IsLyricSettling;
+        return moving || IsLyricSettling || Body.IsRimActive;
     }
 
     void ApplyShape()
@@ -234,19 +236,12 @@ public partial class MainWindow
         double scale = Math.Max(_scale.Value, MinScale), size = Math.Max(_userScale.Value, MinScale);
         double dpi = VisualTreeHelper.GetDpi(this).DpiScaleY;
 
-        if (Settings.IslandAlign != IslandAlign.Center && _hwnd != IntPtr.Zero)
+        double alignOffsetX = Settings.IslandAlign switch
         {
-            double screenW = SystemParameters.PrimaryScreenWidth;
-            double pillW = w * size;
-            double targetLeft = Settings.IslandAlign == IslandAlign.Left
-                ? (20 + Settings.PosX) + (pillW / 2) - (Width / 2)
-                : (screenW - 20 + Settings.PosX) - (pillW / 2) - (Width / 2);
-            if (Math.Abs(Left - targetLeft) > 0.5)
-            {
-                Left = targetLeft;
-                _glass?.Place();
-            }
-        }
+            IslandAlign.Left => (w - HostWidth) / 2.0,
+            IslandAlign.Right => (HostWidth - w) / 2.0,
+            _ => 0
+        };
 
         double radius = Settings.Radius < 100 ? (r * Settings.Radius / 100.0) : r;
         Pill.Width = w;
@@ -268,7 +263,7 @@ public partial class MainWindow
 
         IslandScale.ScaleX = IslandScale.ScaleY = scale;
         RootSize.ScaleX = RootSize.ScaleY = size;
-        RootMove.X = 0;
+        RootMove.X = alignOffsetX;
         RootMove.Y = _offsetY.Value + _topGap.Value / size;
         RootLean.X = Math.Round(_leanX.Value * size * dpi) / (size * dpi);
         SharpenLyricCache(dpi);
@@ -301,19 +296,25 @@ public partial class MainWindow
         bool leanReady = leaning && Math.Abs(_leanDrag) >= LeanToSkip;
         double hintScale = leanReady ? 1.15 : 0.8 + 0.25 * leanProgress;
 
-        double leftAlpha = leaning && _leanDrag > 0 ? leanProgress : 0;
-        LeanLeftHint.Opacity = leftAlpha;
-        LeanLeftScale.ScaleX = LeanLeftScale.ScaleY = hintScale;
-        LeanLeftMove.X = pill.Left + 6 + 4 * leanProgress;
-        LeanLeftMove.Y = (pill.Height - LeanLeftHint.Height) / 2;
-        LeanLeftIcon.Fill = leanReady && _leanDrag > 0 ? _accentBrush : Brushes.White;
+        bool invert = Settings.InvertMediaGesture;
 
-        double rightAlpha = leaning && _leanDrag < 0 ? leanProgress : 0;
+        // Hint for drag RIGHT: placed in the expanded space on the right side
+        double rightAlpha = leaning && _leanDrag > 0 ? leanProgress : 0;
         LeanRightHint.Opacity = rightAlpha;
         LeanRightScale.ScaleX = LeanRightScale.ScaleY = hintScale;
-        LeanRightMove.X = pill.Right - LeanRightHint.Width - 6 - 4 * leanProgress;
+        LeanRightMove.X = pill.Right - LeanRightHint.Width - 4;
         LeanRightMove.Y = (pill.Height - LeanRightHint.Height) / 2;
-        LeanRightIcon.Fill = leanReady && _leanDrag < 0 ? _accentBrush : Brushes.White;
+        LeanRightIcon.Kind = invert ? Glyph.Back : Glyph.Chevron;
+        LeanRightIcon.Fill = leanReady && _leanDrag > 0 ? _accentBrush : Brushes.White;
+
+        // Hint for drag LEFT: placed in the expanded space on the left side
+        double leftAlpha = leaning && _leanDrag < 0 ? leanProgress : 0;
+        LeanLeftHint.Opacity = leftAlpha;
+        LeanLeftScale.ScaleX = LeanLeftScale.ScaleY = hintScale;
+        LeanLeftMove.X = pill.Left + 4;
+        LeanLeftMove.Y = (pill.Height - LeanLeftHint.Height) / 2;
+        LeanLeftIcon.Kind = invert ? Glyph.Chevron : Glyph.Back;
+        LeanLeftIcon.Fill = leanReady && _leanDrag < 0 ? _accentBrush : Brushes.White;
 
         double handleAlpha = Math.Clamp(_pullHandleAlpha.Value, 0, 1);
         bool showHandle = pill.Height < CompactMaxHeight && _grab == Grab.Pull && handleAlpha > PullHandleVisibleEpsilon;

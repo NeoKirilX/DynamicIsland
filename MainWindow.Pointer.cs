@@ -116,12 +116,14 @@ public partial class MainWindow
 
     void SkipByLean(double leant, double pace)
     {
-        int way = -DragDirection(leant, pace, LeanToSkip);
-        if (Settings.InvertMediaGesture) way = -way;
-        if (way == 0 || !IsMediaActive) return;
+        int dir = DragDirection(leant, pace, LeanToSkip);
+        if (dir == 0 || !IsMediaActive) return;
 
-        RememberSkip(way);
-        if (way > 0) _media.Next();
+        bool next = dir > 0;
+        if (Settings.InvertMediaGesture) next = !next;
+
+        RememberSkip(next ? 1 : -1);
+        if (next) _media.Next();
         else _media.Previous();
         _leanX.Velocity = Math.Clamp(pace, -MaxThrowSpeed, MaxThrowSpeed);
     }

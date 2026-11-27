@@ -156,6 +156,7 @@ public partial class MainWindow
     {
         Settings.Rim = !Settings.Rim;
         UpdateSwitches(true);
+        RefreshLookPage();
         SyncRim();
     }
 
@@ -867,6 +868,7 @@ public partial class MainWindow
         SeekGlowSwitch.Set(Settings.SeekGlow, LookView.IsVisible);
         CompactProgressSegments.Set((int)Settings.CompactProgress, LookView.IsVisible);
         GlassSwitch.Set(Settings.Glass, LookView.IsVisible);
+        LookRimSwitch.Set(Settings.Rim, LookView.IsVisible);
         MaxIslandWidthSlider.Set(Settings.MaxIslandWidth, LookView.IsVisible);
         MaxIslandWidthText.Text = $"{Settings.MaxIslandWidth} px";
         InvertGestureSwitch.Set(Settings.InvertMediaGesture, LookView.IsVisible);
@@ -906,6 +908,7 @@ public partial class MainWindow
 
     void ApplyLook()
     {
+        ClampPositionsToScreen();
         RefreshLookPage();
         _userScale.Target = Settings.Scale / 100.0;
         _topGap.Target = Settings.Notch ? 0 : Settings.Gap;

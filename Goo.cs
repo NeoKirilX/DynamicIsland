@@ -41,6 +41,21 @@ public sealed class Goo : FrameworkElement
     Geometry? _innerGeometry, _outerGeometry, _bevelRingGeometry;
     Geometry[] _innerParts = [];
 
+    double _rimProgress = Settings.Rim ? 1.0 : 0.0;
+    double _targetRimProgress = Settings.Rim ? 1.0 : 0.0;
+    double _rimAngle;
+    double _beatEnergy;
+
+    static readonly Color[] DefaultVibrantPalette =
+    [
+        Color.FromRgb(0x0A, 0x84, 0xFF), // Apple Blue
+        Color.FromRgb(0x5E, 0x5C, 0xE6), // Indigo
+        Color.FromRgb(0xBF, 0x5A, 0xF2), // Purple
+        Color.FromRgb(0xFF, 0x37, 0x5F), // Pink
+        Color.FromRgb(0xFF, 0x9F, 0x0A), // Orange
+        Color.FromRgb(0x30, 0xD1, 0x58), // Green
+    ];
+
     public Goo()
     {
         _edge = new Pen(_rim, 2 * RimWidth) { LineJoin = PenLineJoin.Round };
@@ -199,37 +214,71 @@ public sealed class Goo : FrameworkElement
         return ring;
     }
 
-    void ApplyRimColors(Duration time)
+    public bool IsRimActive => Settings.Rim || _rimProgress > 0.001;
+
+    public void SetBeat(double beat)
     {
-        Color top, mid, mid2, bottom;
+        _beatEnergy = Math.Clamp(beat, 0, 1.0);
+    }
 
-        if (_palette is { Length: > 0 } p)
+    public void SyncRimState(bool on)
+    {
+        _targetRimProgress = on ? 1.0 : 0.0;
+    }
+
+    public bool Advance(double dt)
+    {
+        bool changed = false;
+
+        if (Math.Abs(_rimProgress - _targetRimProgress) > 0.001)
         {
-            Color c0 = p[0];
-            Color c1 = p[Math.Min(1, p.Length - 1)];
-            Color c2 = p[Math.Min(2, p.Length - 1)];
-
-            top = Brighten(c0, 0.25).WithAlpha(_glass ? 0.68 : 0.62);
-            mid = c1.WithAlpha(_glass ? 0.24 : 0.30);
-            mid2 = c2.WithAlpha(_glass ? 0.28 : 0.36);
-            bottom = Brighten(c0, 0.12).WithAlpha(_glass ? 0.48 : 0.46);
+            double speed = _targetRimProgress > _rimProgress ? 1.35 : 2.5;
+            if (_targetRimProgress > _rimProgress)
+                _rimProgress = Math.Min(_rimProgress + dt * speed, 1.0);
+            else
+                _rimProgress = Math.Max(_rimProgress - dt * speed, 0.0);
+            changed = true;
         }
         else
         {
-            top = _glass ? GlassTop : PlainTop;
-            mid = _glass ? GlassMid : PlainMid;
-            mid2 = mid;
-            bottom = _glass ? GlassBottom : PlainBottom;
+            _rimProgress = _targetRimProgress;
         }
 
-        AnimateStop(_rim, 0, top, time);
-        AnimateStop(_rim, 1, mid, time);
-        AnimateStop(_rim, 2, mid2, time);
-        AnimateStop(_rim, 3, bottom, time);
+        if (_rimProgress > 0.001)
+        {
+            double rotSpeed = 38.0 + _beatEnergy * 240.0;
+            _rimAngle = (_rimAngle + dt * rotSpeed) % 360.0;
+            double rad = _rimAngle * Math.PI / 180.0;
+            double dx = 0.5 * Math.Cos(rad);
+            double dy = 0.5 * Math.Sin(rad);
+            _rim.StartPoint = new Point(0.5 - dx, 0.5 - dy);
+            _rim.EndPoint = new Point(0.5 + dx, 0.5 + dy);
+            changed = true;
+        }
+
+        if (changed) InvalidateVisual();
+        return changed || _targetRimProgress > 0.001;
     }
 
-    static void AnimateStop(LinearGradientBrush brush, int index, Color to, Duration time) =>
-        brush.GradientStops[index].BeginAnimation(GradientStop.ColorProperty, new ColorAnimation(to, time));
+    void ApplyRimColors(Duration time)
+    {
+        Color[] p = _palette is { Length: > 0 } pal ? pal : DefaultVibrantPalette;
+        _rim.GradientStops.Clear();
+        int count = p.Length;
+        for (int i = 0; i < count; i++)
+        {
+            double offset = (double)i / count;
+            Color c = Brighten(p[i], 0.22).WithAlpha(_glass ? 0.72 : 0.65);
+            _rim.GradientStops.Add(new GradientStop(c, offset));
+        }
+        _rim.GradientStops.Add(new GradientStop(Brighten(p[0], 0.22).WithAlpha(_glass ? 0.72 : 0.65), 1.0));
+    }
+
+    static void AnimateStop(LinearGradientBrush brush, int index, Color to, Duration time)
+    {
+        if (index < brush.GradientStops.Count)
+            brush.GradientStops[index].BeginAnimation(GradientStop.ColorProperty, new ColorAnimation(to, time));
+    }
 
     protected override void OnRender(DrawingContext dc)
     {
@@ -250,7 +299,22 @@ public sealed class Goo : FrameworkElement
         outside.Children.Add(body);
 
         dc.PushClip(outside);
-        dc.DrawGeometry(null, _edge, body);
+        if (_rimProgress > 0.001)
+        {
+            if (_rimProgress < 0.999)
+            {
+                double perimeter = 2 * (bounds.Width + bounds.Height) - 1.7 * _radius;
+                double dashLen = Math.Max(_rimProgress * perimeter / (2 * RimWidth), 0.001);
+                double gapLen = perimeter / (2 * RimWidth) + 100;
+                _edge.DashStyle = new DashStyle([dashLen, gapLen], 0);
+                _edge.DashCap = PenLineCap.Round;
+            }
+            else
+            {
+                _edge.DashStyle = null;
+            }
+            dc.DrawGeometry(null, _edge, body);
+        }
         if (_pointer is { } at && bounds.Height > 44)
         {
             _specularBrush.Center = _specularBrush.GradientOrigin = at;

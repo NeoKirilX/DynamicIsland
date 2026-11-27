@@ -1464,6 +1464,13 @@
                                         <local:Toggle x:Name="GlassSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>
                                 </Button>
+                                <Button Style="{StaticResource RowButton}" Click="Rim_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Rim"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Ободок (переливание)"/>
+                                        <local:Toggle x:Name="LookRimSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
                                 <Grid Height="34" Margin="12,0">
                                     <local:Icon Style="{StaticResource RowIcon}" Kind="Expand"/>
                                     <TextBlock Style="{StaticResource RowLabel}" Text="Макс. ширина"/>
