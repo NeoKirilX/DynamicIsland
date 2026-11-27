@@ -1839,71 +1839,12 @@
                         </Grid>
                     </Border>
                 </Grid>
-            </Grid>
 
-            <Canvas x:Name="Shared" Visibility="Collapsed" Opacity="0">
-                <Ellipse x:Name="ArtGlow" Width="96" Height="96" Opacity="0" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
-                    <Ellipse.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform x:Name="ArtGlowScale"/>
-                            <TranslateTransform x:Name="ArtGlowMove"/>
-                        </TransformGroup>
-                    </Ellipse.RenderTransform>
-                </Ellipse>
-                <Grid x:Name="ArtSpot" Width="64" Height="64" MouseLeftButtonUp="Art_MouseLeftButtonUp">
-                    <Grid.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform x:Name="ArtSize"/>
-                            <TranslateTransform x:Name="ArtMove"/>
-                        </TransformGroup>
-                    </Grid.RenderTransform>
-                    <Border Background="{StaticResource ArtPlaceholder}">
-                        <local:Icon Kind="Note" Width="30" Height="30" Fill="{StaticResource Dim}"/>
-                    </Border>
-                    <local:Cover x:Name="Art" Radius="16"/>
-                </Grid>
-                <local:CoverRing x:Name="ArtRing" Width="28" Height="28" Opacity="0" IsHitTestVisible="False">
-                    <local:CoverRing.RenderTransform>
-                        <TranslateTransform x:Name="ArtRingMove"/>
-                    </local:CoverRing.RenderTransform>
-                </local:CoverRing>
-                <local:Equalizer x:Name="Eq" Bars="8" Few="5" Width="21" Height="16" IsHitTestVisible="False">
-                    <local:Equalizer.RenderTransform>
-                        <TranslateTransform x:Name="EqMove"/>
-                    </local:Equalizer.RenderTransform>
-                </local:Equalizer>
-            </Canvas>
-
-            <Canvas x:Name="GestureHints" IsHitTestVisible="False">
-                <Border x:Name="LeanLeftHint" Width="24" Height="24" CornerRadius="12" Background="#36000000" Opacity="0" RenderTransformOrigin="0.5,0.5">
-                    <Border.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform x:Name="LeanLeftScale"/>
-                            <TranslateTransform x:Name="LeanLeftMove"/>
-                        </TransformGroup>
-                    </Border.RenderTransform>
-                    <local:Icon x:Name="LeanLeftIcon" Kind="Back" Width="11" Height="11" Fill="White"/>
-                </Border>
-                <Border x:Name="LeanRightHint" Width="24" Height="24" CornerRadius="12" Background="#36000000" Opacity="0" RenderTransformOrigin="0.5,0.5">
-                    <Border.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform x:Name="LeanRightScale"/>
-                            <TranslateTransform x:Name="LeanRightMove"/>
-                        </TransformGroup>
-                    </Border.RenderTransform>
-                    <local:Icon x:Name="LeanRightIcon" Kind="Chevron" Width="11" Height="11" Fill="White"/>
-                </Border>
-                <Border x:Name="PullHandle" Width="28" Height="3" CornerRadius="1.5" Background="White" Opacity="0" Visibility="Collapsed" UseLayoutRounding="False">
-                    <Border.RenderTransform>
-                        <TranslateTransform x:Name="PullHandleMove"/>
-                    </Border.RenderTransform>
-                </Border>
-            </Canvas>
             <!-- iOS Modal Coordinate Confirmation Alert -->
             <Grid x:Name="CoordConfirmOverlay" Visibility="Collapsed" IsHitTestVisible="False"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <!-- Dimmer background under the alert -->
-                <Border x:Name="CoordConfirmDimmer" Background="#7F000000" Opacity="0"
+                <Border x:Name="CoordConfirmDimmer" Background="#45000000" Opacity="0"
                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                         MouseLeftButtonDown="CoordConfirm_BackgroundClick"/>
                 
@@ -1984,6 +1925,66 @@
 
 
         </Grid>
+            </Grid>
+
+            <Canvas x:Name="Shared" Visibility="Collapsed" Opacity="0">
+                <Ellipse x:Name="ArtGlow" Width="96" Height="96" Opacity="0" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+                    <Ellipse.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="ArtGlowScale"/>
+                            <TranslateTransform x:Name="ArtGlowMove"/>
+                        </TransformGroup>
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+                <Grid x:Name="ArtSpot" Width="64" Height="64" MouseLeftButtonUp="Art_MouseLeftButtonUp">
+                    <Grid.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="ArtSize"/>
+                            <TranslateTransform x:Name="ArtMove"/>
+                        </TransformGroup>
+                    </Grid.RenderTransform>
+                    <Border Background="{StaticResource ArtPlaceholder}">
+                        <local:Icon Kind="Note" Width="30" Height="30" Fill="{StaticResource Dim}"/>
+                    </Border>
+                    <local:Cover x:Name="Art" Radius="16"/>
+                </Grid>
+                <local:CoverRing x:Name="ArtRing" Width="28" Height="28" Opacity="0" IsHitTestVisible="False">
+                    <local:CoverRing.RenderTransform>
+                        <TranslateTransform x:Name="ArtRingMove"/>
+                    </local:CoverRing.RenderTransform>
+                </local:CoverRing>
+                <local:Equalizer x:Name="Eq" Bars="8" Few="5" Width="21" Height="16" IsHitTestVisible="False">
+                    <local:Equalizer.RenderTransform>
+                        <TranslateTransform x:Name="EqMove"/>
+                    </local:Equalizer.RenderTransform>
+                </local:Equalizer>
+            </Canvas>
+
+            <Canvas x:Name="GestureHints" IsHitTestVisible="False">
+                <Border x:Name="LeanLeftHint" Width="24" Height="24" CornerRadius="12" Background="#36000000" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="LeanLeftScale"/>
+                            <TranslateTransform x:Name="LeanLeftMove"/>
+                        </TransformGroup>
+                    </Border.RenderTransform>
+                    <local:Icon x:Name="LeanLeftIcon" Kind="Back" Width="11" Height="11" Fill="White"/>
+                </Border>
+                <Border x:Name="LeanRightHint" Width="24" Height="24" CornerRadius="12" Background="#36000000" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="LeanRightScale"/>
+                            <TranslateTransform x:Name="LeanRightMove"/>
+                        </TransformGroup>
+                    </Border.RenderTransform>
+                    <local:Icon x:Name="LeanRightIcon" Kind="Chevron" Width="11" Height="11" Fill="White"/>
+                </Border>
+                <Border x:Name="PullHandle" Width="28" Height="3" CornerRadius="1.5" Background="White" Opacity="0" Visibility="Collapsed" UseLayoutRounding="False">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="PullHandleMove"/>
+                    </Border.RenderTransform>
+                </Border>
+            </Canvas>
 
 
 
