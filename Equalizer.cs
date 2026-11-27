@@ -127,17 +127,20 @@ public sealed class Equalizer : FrameworkElement
     {
         _closed.Measure(spectrum, dt);
         _opened.Measure(spectrum, dt);
+        double sens = Settings.EqSensitivity / 100.0;
         for (int bar = 0; bar < _bars; bar++)
         {
             int band = _bandOfBar[bar];
             double opened = _opened.Heights[band];
-            _targets[bar] = band < _closed.Heights.Length ? _closed.Heights[band] + (opened - _closed.Heights[band]) * _open : opened;
+            double h = band < _closed.Heights.Length ? _closed.Heights[band] + (opened - _closed.Heights[band]) * _open : opened;
+            _targets[bar] = Math.Clamp(h * sens, 0, 1);
         }
     }
 
     void FollowPeak(double peak, double t)
     {
-        double level = Math.Pow(Math.Clamp(peak * 1.8, 0, 1), 0.6);
+        double sens = Settings.EqSensitivity / 100.0;
+        double level = Math.Pow(Math.Clamp(peak * 1.8 * sens, 0, 1), 0.6);
         double mid = (_bars - 1) / 2.0;
         for (int i = 0; i < _bars; i++)
         {

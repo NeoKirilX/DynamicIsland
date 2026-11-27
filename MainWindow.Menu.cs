@@ -856,6 +856,114 @@ public partial class MainWindow
         LyricLeadText.Text = (Settings.LyricLeadSec / 10.0).ToString("0.0") + " с";
     }
 
+    void GlassAmountSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.GlassAmount = (int)GlassAmountSlider.Value;
+        GlassAmountText.Text = Settings.GlassAmount + "%";
+        SyncGlass(true);
+    }
+
+    void TextScaleSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.TextScale = (int)TextScaleSlider.Value;
+        TextScaleText.Text = Settings.TextScale + "%";
+        StartShapeLoop();
+    }
+
+    void CompactEqualizer_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.CompactEqualizer = !Settings.CompactEqualizer;
+        RefreshLookPage();
+    }
+
+    void CompactEqDots_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.CompactEqDots = CompactEqDotsSegments.PickUnderPointer() == 1;
+        RefreshLookPage();
+    }
+
+    void CompactEqBarsSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.CompactEqBars = (int)CompactEqBarsSlider.Value;
+        CompactEqBarsText.Text = Settings.CompactEqBars.ToString();
+        Eq.Few = Settings.CompactEqBars;
+    }
+
+    void MiniEqualizer_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.MiniEqualizer = !Settings.MiniEqualizer;
+        RefreshLookPage();
+    }
+
+    void EqBarsSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.EqBars = (int)EqBarsSlider.Value;
+        EqBarsText.Text = Settings.EqBars.ToString();
+        Eq.Bars = Settings.EqBars;
+    }
+
+    void EqSensitivitySlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.EqSensitivity = (int)EqSensitivitySlider.Value;
+        EqSensitivityText.Text = Settings.EqSensitivity + "%";
+    }
+
+    void MatrixRowsSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.MatrixRows = (int)MatrixRowsSlider.Value;
+        MatrixRowsText.Text = Settings.MatrixRows.ToString();
+    }
+
+    void MatrixFadeSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.MatrixFadeStrength = (int)MatrixFadeSlider.Value;
+        MatrixFadeText.Text = Settings.MatrixFadeStrength + "%";
+    }
+
+    void MatrixDensity_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.MatrixDensity = (MatrixDensity)MatrixDensitySegments.PickUnderPointer();
+        RefreshLookPage();
+    }
+
+    void MatrixOpacitySlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.MatrixOpacity = (int)MatrixOpacitySlider.Value;
+        MatrixOpacityText.Text = Settings.MatrixOpacity + "%";
+    }
+
+    void ComboEnabled_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ComboEnabled = !Settings.ComboEnabled;
+        RefreshLookPage();
+        UpdateSwitches(true);
+    }
+
+    void ComboLookStyle_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ComboCounterStyle = (ComboCounterStyle)ComboStyleSegments.PickUnderPointer();
+        RefreshLookPage();
+        UpdateSwitches(true);
+    }
+
+    void ComboMinRepeatsSlider_Changed(object? sender, EventArgs e)
+    {
+        Settings.ComboMinRepeats = (int)ComboMinRepeatsSlider.Value;
+        ComboMinRepeatsText.Text = Settings.ComboMinRepeats.ToString();
+    }
+
+    void ComboStripBrackets_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ComboStripBrackets = !Settings.ComboStripBrackets;
+        RefreshLookPage();
+    }
+
+    void ComboIgnoreAdlibs_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ComboIgnoreAdlibs = !Settings.ComboIgnoreAdlibs;
+        RefreshLookPage();
+    }
+
     void CenterPos_Click(object sender, RoutedEventArgs e)
     {
         Settings.PosX = 0;
@@ -891,6 +999,37 @@ public partial class MainWindow
         SeekGlowSwitch.Set(Settings.SeekGlow, LookView.IsVisible);
         CompactProgressSegments.Set((int)Settings.CompactProgress, LookView.IsVisible);
         GlassSwitch.Set(Settings.Glass, LookView.IsVisible);
+        GlassAmountSlider.Set(Settings.GlassAmount, LookView.IsVisible);
+        GlassAmountText.Text = Settings.GlassAmount + "%";
+        TextScaleSlider.Set(Settings.TextScale, LookView.IsVisible);
+        TextScaleText.Text = Settings.TextScale + "%";
+
+        CompactEqualizerSwitch.Set(Settings.CompactEqualizer, LookView.IsVisible);
+        CompactEqDotsSegments.Set(Settings.CompactEqDots ? 1 : 0, LookView.IsVisible);
+        CompactEqBarsSlider.Set(Settings.CompactEqBars, LookView.IsVisible);
+        CompactEqBarsText.Text = Settings.CompactEqBars.ToString();
+
+        MiniEqualizerSwitch.Set(Settings.MiniEqualizer, LookView.IsVisible);
+        EqBarsSlider.Set(Settings.EqBars, LookView.IsVisible);
+        EqBarsText.Text = Settings.EqBars.ToString();
+        EqSensitivitySlider.Set(Settings.EqSensitivity, LookView.IsVisible);
+        EqSensitivityText.Text = Settings.EqSensitivity + "%";
+
+        MatrixRowsSlider.Set(Settings.MatrixRows, LookView.IsVisible);
+        MatrixRowsText.Text = Settings.MatrixRows.ToString();
+        MatrixFadeSlider.Set(Settings.MatrixFadeStrength, LookView.IsVisible);
+        MatrixFadeText.Text = Settings.MatrixFadeStrength + "%";
+        MatrixDensitySegments.Set((int)Settings.MatrixDensity, LookView.IsVisible);
+        MatrixOpacitySlider.Set(Settings.MatrixOpacity, LookView.IsVisible);
+        MatrixOpacityText.Text = Settings.MatrixOpacity + "%";
+
+        ComboEnabledSwitch.Set(Settings.ComboEnabled, LookView.IsVisible);
+        ComboStyleSegments.Set((int)Settings.ComboCounterStyle, LookView.IsVisible);
+        ComboMinRepeatsSlider.Set(Settings.ComboMinRepeats, LookView.IsVisible);
+        ComboMinRepeatsText.Text = Settings.ComboMinRepeats.ToString();
+        ComboStripBracketsSwitch.Set(Settings.ComboStripBrackets, LookView.IsVisible);
+        ComboIgnoreAdlibsSwitch.Set(Settings.ComboIgnoreAdlibs, LookView.IsVisible);
+
         LookRimSwitch.Set(Settings.Rim, LookView.IsVisible);
         MaxIslandWidthSlider.Set(Settings.MaxIslandWidth, LookView.IsVisible);
         MaxIslandWidthText.Text = $"{Settings.MaxIslandWidth} px";

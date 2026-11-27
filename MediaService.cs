@@ -380,7 +380,16 @@ sealed class MediaService
             if (version != _refreshVersion) return;
 
             string title = properties.Title ?? "";
-            bool sameTrack = title == _title;
+            string artist = properties.Artist ?? "";
+            bool sameTrack = title == _title && artist == _artist;
+
+            // Immediately set title and artist so the UI updates with zero latency!
+            _title = title;
+            _artist = artist;
+            ReadPlayback();
+            ReadTimeline();
+            Changed?.Invoke();
+
             (ImageSource? art, Color[] palette) = (null, CoverPalette.Plain);
             if (properties.Thumbnail != null)
             {
@@ -390,16 +399,15 @@ sealed class MediaService
 
             if (art == null && title.Length > 0)
             {
-                (art, palette) = await FetchFallbackCoverAsync(title, properties.Artist ?? "");
+                (art, palette) = await FetchFallbackCoverAsync(title, artist);
                 if (version != _refreshVersion) return;
             }
 
-            _title = title;
-            _artist = properties.Artist ?? "";
             if (art != null || !sameTrack)
             {
                 Art = art;
                 Palette = palette;
+                Changed?.Invoke();
             }
         }
         catch (Exception ex)

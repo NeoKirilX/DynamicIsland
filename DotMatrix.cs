@@ -6,11 +6,19 @@ namespace DynamicIsland;
 
 public sealed class DotMatrix : FrameworkElement
 {
-    const int Rows = 4, ColorSteps = 24;
-    const double ColumnPitch = 8, RowPitch = 6.5, DotRadius = 1.5, Bottom = 7, SideInset = 6;
+    const int ColorSteps = 24;
+    int Rows => Math.Clamp(Settings.MatrixRows, 4, 20);
+    double ColumnPitch => Settings.MatrixDensity switch
+    {
+        MatrixDensity.Sparse => 10.0,
+        MatrixDensity.Dense => 6.5,
+        _ => 8.0
+    };
+    const double RowPitch = 6.5, DotRadius = 1.5, Bottom = 7, SideInset = 6;
     const double EdgeClearance = 3;
     const double LitReach = 1.1;
-    const double UnlitOpacity = 0.08, LitOpacity = 0.85, HeadWhiteness = 0.5;
+    const double UnlitOpacity = 0.08, HeadWhiteness = 0.5;
+    double LitOpacity => Math.Clamp(Settings.MatrixOpacity / 100.0, 0.3, 1.0);
     const double Absent = 0.01;
 
     readonly record struct Column(double X, double Share, int LowestRow);
@@ -72,13 +80,15 @@ public sealed class DotMatrix : FrameworkElement
             double lit = _levels.At(column.Share) * Rows * LitReach;
             int step = (int)Math.Round(column.Share * (ColorSteps - 1));
             Color color = _brushes[step].Color;
-            for (int row = column.LowestRow; row < Rows && lit - row > Absent; row++)
+            int rows = Rows;
+            for (int row = column.LowestRow; row < rows && lit - row > Absent; row++)
             {
                 var center = new Point(column.X, h - Bottom - row * RowPitch);
                 double on = Math.Clamp(lit - row, 0, 1), head = on * (1 - Math.Clamp(lit - row - 1, 0, 1));
+                double fade = Settings.MatrixFadeStrength > 0 ? Math.Clamp(1.0 - ((double)row / Math.Max(rows - 1, 1)) * (Settings.MatrixFadeStrength / 100.0), 0, 1) : 1.0;
 
-                dc.DrawEllipse(_shades[step].Of(color, LitOpacity * on), null, center, DotRadius, DotRadius);
-                if (head > Absent) dc.DrawEllipse(Shades.White(HeadWhiteness * head), null, center, DotRadius, DotRadius);
+                dc.DrawEllipse(_shades[step].Of(color, LitOpacity * on * fade), null, center, DotRadius, DotRadius);
+                if (head > Absent) dc.DrawEllipse(Shades.White(HeadWhiteness * head * fade), null, center, DotRadius, DotRadius);
             }
         }
     }

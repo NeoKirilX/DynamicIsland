@@ -287,6 +287,8 @@ public partial class MainWindow : Window
     const int DBT_DEVICEARRIVAL = 0x8000;
     const int DBT_DEVICEREMOVECOMPLETE = 0x8004;
     readonly HashSet<string> _knownDrives = new(StringComparer.OrdinalIgnoreCase);
+    DateTime _lastDeviceArrivalNotify = DateTime.MinValue;
+    DateTime _lastDeviceRemovalNotify = DateTime.MinValue;
 
     void OnDeviceArrival()
     {
@@ -297,11 +299,13 @@ public partial class MainWindow : Window
             try
             {
                 var currentDrives = System.IO.DriveInfo.GetDrives();
+                bool foundNewLetter = false;
                 foreach (var d in currentDrives)
                 {
                     if (!_knownDrives.Contains(d.Name))
                     {
                         _knownDrives.Add(d.Name);
+                        foundNewLetter = true;
                         string label = "";
                         string sizeStr = "";
                         try
@@ -316,8 +320,16 @@ public partial class MainWindow : Window
                         catch {}
                         if (string.IsNullOrEmpty(label)) label = "Новый накопитель";
                         string driveLetter = d.Name.TrimEnd('\\');
+                        _lastDeviceArrivalNotify = DateTime.UtcNow;
                         Notify(Glyph.Folder, _orange, label, $"{driveLetter}{sizeStr} подключен", 4);
                     }
+                }
+
+                // If device arrival fired (e.g. USB flash drive with RAW/unassigned partitions), but no standard drive letter appeared:
+                if (!foundNewLetter && (DateTime.UtcNow - _lastDeviceArrivalNotify).TotalSeconds > 2.0)
+                {
+                    _lastDeviceArrivalNotify = DateTime.UtcNow;
+                    Notify(Glyph.Folder, _orange, "Устройство подключено", "Внешний накопитель или USB", 4);
                 }
             }
             catch {}
@@ -333,10 +345,19 @@ public partial class MainWindow : Window
             {
                 var currentDrives = new HashSet<string>(System.IO.DriveInfo.GetDrives().Select(d => d.Name), StringComparer.OrdinalIgnoreCase);
                 var removed = _knownDrives.Where(d => !currentDrives.Contains(d)).ToList();
-                foreach (var name in removed)
+                if (removed.Count > 0)
                 {
-                    _knownDrives.Remove(name);
-                    Notify(Glyph.Folder, BrushResource("Dim"), "Накопитель извлечен", name.TrimEnd('\\'), 3);
+                    foreach (var name in removed)
+                    {
+                        _knownDrives.Remove(name);
+                        _lastDeviceRemovalNotify = DateTime.UtcNow;
+                        Notify(Glyph.Folder, BrushResource("Dim"), "Накопитель извлечен", name.TrimEnd('\\'), 3);
+                    }
+                }
+                else if ((DateTime.UtcNow - _lastDeviceRemovalNotify).TotalSeconds > 2.0)
+                {
+                    _lastDeviceRemovalNotify = DateTime.UtcNow;
+                    Notify(Glyph.Folder, BrushResource("Dim"), "Устройство отключено", "Внешний накопитель или USB", 3);
                 }
             }
             catch {}

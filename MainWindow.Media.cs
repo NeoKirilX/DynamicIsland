@@ -311,6 +311,13 @@ public partial class MainWindow
         Eq.Width = eqW;
         Eq.Height = eqH;
         Eq.Open = _barsOpen.Value;
+        Eq.Few = Settings.CompactEqBars;
+        Eq.Bars = Settings.EqBars;
+        Eq.Dots = _barsOpen.Value < 0.5 ? Settings.CompactEqDots : Settings.Dots;
+        double eqAlpha = _barsOpen.Value < 0.5 
+            ? (Settings.CompactEqualizer ? 1.0 : 0.0) 
+            : (Settings.MiniEqualizer ? 1.0 : 0.0);
+        Eq.Opacity = eqAlpha;
         EqMove.X = baseRight - bubbleExtra - _barsRight.Value - eqW;
         EqMove.Y = _barsCenterY.Value - eqH / 2;
     }

@@ -1527,6 +1527,18 @@
                                         <local:Toggle x:Name="GlassSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>
                                 </Button>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Сила стекла"/>
+                                    <local:Scrubber x:Name="GlassAmountSlider" Style="{StaticResource RowSlider}" Minimum="20" Maximum="100" Step="5" Changed="GlassAmountSlider_Changed"/>
+                                    <local:Digits x:Name="GlassAmountText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Размер текста"/>
+                                    <local:Scrubber x:Name="TextScaleSlider" Style="{StaticResource RowSlider}" Minimum="75" Maximum="130" Step="5" Changed="TextScaleSlider_Changed"/>
+                                    <local:Digits x:Name="TextScaleText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
                                 <Button Style="{StaticResource RowButton}" Click="Rim_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Rim"/>
@@ -1615,13 +1627,85 @@
                                         <local:Segments x:Name="CompactProgressSegments" Style="{StaticResource RowSegments}" Labels="Выкл|Кольцо|Заливка"/>
                                     </Grid>
                                 </Button>
+                                <!-- ЭКВАЛАЙЗЕР И СПЕКТР -->
+                                <Border Style="{StaticResource RowDivider}"/>
+                                <TextBlock Style="{StaticResource Caption}" Text="ЭКВАЛАЙЗЕР И СПЕКТР" Margin="12,6,0,2"/>
+                                <Button Style="{StaticResource RowButton}" Click="CompactEqualizer_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Bars"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="На плашке (свернуто)"/>
+                                        <local:Toggle x:Name="CompactEqualizerSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource RowButton}" Click="CompactEqDots_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Pulse"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Стиль на плашке"/>
+                                        <local:Segments x:Name="CompactEqDotsSegments" Style="{StaticResource RowSegments}" Labels="Полоски|Точки"/>
+                                    </Grid>
+                                </Button>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Полосы на плашке"/>
+                                    <local:Scrubber x:Name="CompactEqBarsSlider" Style="{StaticResource RowSlider}" Minimum="2" Maximum="8" Step="1" Changed="CompactEqBarsSlider_Changed"/>
+                                    <local:Digits x:Name="CompactEqBarsText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Button Style="{StaticResource RowButton}" Click="MiniEqualizer_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Bars"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Мини-эквалайзер в плеере"/>
+                                        <local:Toggle x:Name="MiniEqualizerSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Dots_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Bars"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Эквалайзер"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Стиль в плеере"/>
                                         <local:Segments x:Name="DotsSegments" Style="{StaticResource RowSegments}" Labels="Полоски|Матрица"/>
                                     </Grid>
                                 </Button>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Полосы в плеере"/>
+                                    <local:Scrubber x:Name="EqBarsSlider" Style="{StaticResource RowSlider}" Minimum="3" Maximum="9" Step="1" Changed="EqBarsSlider_Changed"/>
+                                    <local:Digits x:Name="EqBarsText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Чувствительность"/>
+                                    <local:Scrubber x:Name="EqSensitivitySlider" Style="{StaticResource RowSlider}" Minimum="50" Maximum="200" Step="5" Changed="EqSensitivitySlider_Changed"/>
+                                    <local:Digits x:Name="EqSensitivityText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- ФОНОВАЯ МАТРИЦА -->
+                                <Border Style="{StaticResource RowDivider}"/>
+                                <TextBlock Style="{StaticResource Caption}" Text="ФОНОВАЯ МАТРИЦА ПЛЕЕРА" Margin="12,6,0,2"/>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Ряды матрицы фона"/>
+                                    <local:Scrubber x:Name="MatrixRowsSlider" Style="{StaticResource RowSlider}" Minimum="4" Maximum="20" Step="1" Changed="MatrixRowsSlider_Changed"/>
+                                    <local:Digits x:Name="MatrixRowsText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Сила градиента"/>
+                                    <local:Scrubber x:Name="MatrixFadeSlider" Style="{StaticResource RowSlider}" Minimum="0" Maximum="100" Step="5" Changed="MatrixFadeSlider_Changed"/>
+                                    <local:Digits x:Name="MatrixFadeText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Button Style="{StaticResource RowButton}" Click="MatrixDensity_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Плотность матрицы"/>
+                                        <local:Segments x:Name="MatrixDensitySegments" Style="{StaticResource RowSegments}" Labels="Редкая|Стандарт|Плотная"/>
+                                    </Grid>
+                                </Button>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Яркость матрицы"/>
+                                    <local:Scrubber x:Name="MatrixOpacitySlider" Style="{StaticResource RowSlider}" Minimum="30" Maximum="100" Step="5" Changed="MatrixOpacitySlider_Changed"/>
+                                    <local:Digits x:Name="MatrixOpacityText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Border Style="{StaticResource RowDivider}"/>
                                 <Button Style="{StaticResource RowButton}" Click="SeekStyle_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Segments"/>
@@ -1699,6 +1783,44 @@
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
+
+                                <!-- КОМБО ТЕКСТА -->
+                                <Border Style="{StaticResource RowDivider}"/>
+                                <TextBlock Style="{StaticResource Caption}" Text="КОМБО И ПОВТОРЫ ТЕКСТА" Margin="12,6,0,2"/>
+                                <Button Style="{StaticResource RowButton}" Click="ComboEnabled_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Pulse"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Счетчик повторов"/>
+                                        <local:Toggle x:Name="ComboEnabledSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource RowButton}" Click="ComboLookStyle_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Стиль значка комбо"/>
+                                        <local:Segments x:Name="ComboStyleSegments" Style="{StaticResource RowSegments}" Labels="x3|3x|[3]|#3"/>
+                                    </Grid>
+                                </Button>
+                                <Grid Height="34" Margin="12,0">
+                                    <local:Icon Style="{StaticResource RowIcon}" Kind="Expand"/>
+                                    <TextBlock Style="{StaticResource RowLabel}" Text="Порог повторов"/>
+                                    <local:Scrubber x:Name="ComboMinRepeatsSlider" Style="{StaticResource RowSlider}" Minimum="2" Maximum="5" Step="1" Changed="ComboMinRepeatsSlider_Changed"/>
+                                    <local:Digits x:Name="ComboMinRepeatsText" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Button Style="{StaticResource RowButton}" Click="ComboStripBrackets_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Очищать скобки"/>
+                                        <local:Toggle x:Name="ComboStripBracketsSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource RowButton}" Click="ComboIgnoreAdlibs_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Note"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Игнорировать ad-libs"/>
+                                        <local:Toggle x:Name="ComboIgnoreAdlibsSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
                             </local:RowList>
                         </Canvas>
                     </Border>

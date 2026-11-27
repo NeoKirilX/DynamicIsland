@@ -345,6 +345,7 @@ sealed class Glass
                             Matrix3x2.CreateScale(BevelLensScale, new Vector2((float)center.X, (float)center.Y)));
                     }
                     SetOutline(_bevelOutline, ringFigures, D2D1_FILL_MODE_ALTERNATE);
+                    _bevelVisual.Opacity = BevelOpacity * (Settings.GlassAmount / 100.0f);
                     _bevelVisual.IsVisible = true;
                 }
                 else
