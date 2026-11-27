@@ -127,6 +127,44 @@ static class Native
 
     public static bool RegisterShellHook(IntPtr hwnd) => RegisterShellHookWindow(hwnd);
 
+    [StructLayout(LayoutKind.Sequential)]
+    struct DEV_BROADCAST_DEVICEINTERFACE
+    {
+        public int dbcc_size;
+        public int dbcc_devicetype;
+        public int dbcc_reserved;
+        public Guid dbcc_classguid;
+        public short dbcc_name;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern IntPtr RegisterDeviceNotification(IntPtr hRecipient, IntPtr NotificationFilter, int Flags);
+
+    public static IntPtr RegisterDeviceNotifications(IntPtr hwnd)
+    {
+        var filter = new DEV_BROADCAST_DEVICEINTERFACE
+        {
+            dbcc_size = Marshal.SizeOf<DEV_BROADCAST_DEVICEINTERFACE>(),
+            dbcc_devicetype = 5, // DBT_DEVTYP_DEVICEINTERFACE
+            dbcc_reserved = 0,
+            dbcc_classguid = Guid.Empty
+        };
+        IntPtr buffer = Marshal.AllocHGlobal(filter.dbcc_size);
+        try
+        {
+            Marshal.StructureToPtr(filter, buffer, false);
+            return RegisterDeviceNotification(hwnd, buffer, 0x00000004); // DEVICE_NOTIFY_ALL_INTERFACE_CLASSES
+        }
+        catch
+        {
+            return IntPtr.Zero;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
     public static MediaKey? MediaKeyOf(int message, IntPtr wParam, IntPtr lParam) =>
         message == ShellMessage && wParam.ToInt64() == HSHELL_APPCOMMAND ? (MediaKey)((lParam.ToInt64() >> 16) & 0xFFF) : null;
 

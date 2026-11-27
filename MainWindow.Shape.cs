@@ -316,30 +316,8 @@ public partial class MainWindow
 
     void PlaceGestureHints(Rect pill)
     {
-        bool leaning = _grab == Grab.Lean && IsMediaActive && Math.Abs(_leanDrag) > DragThreshold;
-        double leanProgress = leaning ? Math.Clamp(Math.Abs(_leanDrag) / LeanToSkip, 0, 1) : 0;
-        bool leanReady = leaning && Math.Abs(_leanDrag) >= LeanToSkip;
-        double hintScale = leanReady ? 1.15 : 0.8 + 0.25 * leanProgress;
-
-        bool invert = Settings.InvertMediaGesture;
-
-        // Hint for drag RIGHT: placed in the expanded space on the right side
-        double rightAlpha = leaning && _leanDrag > 0 ? leanProgress : 0;
-        LeanRightHint.Opacity = rightAlpha;
-        LeanRightScale.ScaleX = LeanRightScale.ScaleY = hintScale;
-        LeanRightMove.X = pill.Right - LeanRightHint.Width - 6;
-        LeanRightMove.Y = (pill.Height - LeanRightHint.Height) / 2;
-        LeanRightIcon.Kind = invert ? Glyph.Chevron : Glyph.Back;
-        LeanRightIcon.Fill = leanReady && _leanDrag > 0 ? _accentBrush : Brushes.White;
-
-        // Hint for drag LEFT: placed in the expanded space on the left side
-        double leftAlpha = leaning && _leanDrag < 0 ? leanProgress : 0;
-        LeanLeftHint.Opacity = leftAlpha;
-        LeanLeftScale.ScaleX = LeanLeftScale.ScaleY = hintScale;
-        LeanLeftMove.X = pill.Left + 6;
-        LeanLeftMove.Y = (pill.Height - LeanLeftHint.Height) / 2;
-        LeanLeftIcon.Kind = invert ? Glyph.Back : Glyph.Chevron;
-        LeanLeftIcon.Fill = leanReady && _leanDrag < 0 ? _accentBrush : Brushes.White;
+        LeanRightHint.Opacity = 0;
+        LeanLeftHint.Opacity = 0;
 
         double handleAlpha = Math.Clamp(_pullHandleAlpha.Value, 0, 1);
         bool showHandle = pill.Height < CompactMaxHeight && _grab == Grab.Pull && handleAlpha > PullHandleVisibleEpsilon;

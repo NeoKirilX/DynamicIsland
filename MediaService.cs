@@ -349,13 +349,15 @@ sealed class MediaService
     {
         ReadPlayback();
         ReadTimeline();
+        _ = RefreshAsync();
         Changed?.Invoke();
     });
 
     void OnTimeline(Session session, TimelinePropertiesChangedEventArgs e) => _ui.InvokeAsync(() =>
     {
         ReadPlayback();
-        ReadTimeline();
+        bool changed = ReadTimeline();
+        if (changed) _ = RefreshAsync();
         Changed?.Invoke();
     });
 
@@ -581,12 +583,23 @@ sealed class MediaService
 
     async void WatchPlayback()
     {
+        int pollCount = 0;
         while (true)
         {
             await Task.Delay(IsPlaying ? PollPlayingMs : PollPausedMs);
             try
             {
-                if (ReadPlayback() | ReadTimeline()) Changed?.Invoke();
+                bool p = ReadPlayback();
+                bool t = ReadTimeline();
+                pollCount++;
+                if (p || t || pollCount % 4 == 0)
+                {
+                    _ = _ui.InvokeAsync(() => _ = RefreshAsync());
+                }
+                else if (p || t)
+                {
+                    Changed?.Invoke();
+                }
             }
             catch (Exception ex)
             {

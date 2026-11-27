@@ -45,7 +45,9 @@ public sealed class Equalizer : FrameworkElement
         get => _bars;
         set
         {
-            _bars = Math.Max(2, value);
+            int val = Math.Max(2, value);
+            if (_bars == val) return;
+            _bars = val;
             Rebuild();
         }
     }
@@ -55,7 +57,9 @@ public sealed class Equalizer : FrameworkElement
         get => Math.Min(_few, _bars);
         set
         {
-            _few = Math.Max(2, value);
+            int val = Math.Max(2, value);
+            if (_few == val) return;
+            _few = val;
             Rebuild();
         }
     }

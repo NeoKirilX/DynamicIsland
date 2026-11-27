@@ -165,7 +165,7 @@ static class Settings
     static string _lyricSourceRatings = Read(nameof(LyricSourceRatings), "10,9,8,7,6,5");
 
     // Equalizer properties
-    static bool _compactEqualizer = ReadSwitch(nameof(CompactEqualizer), false);
+    static bool _compactEqualizer = ReadSwitch(nameof(CompactEqualizer), true);
     static bool _compactEqDots = ReadSwitch(nameof(CompactEqDots), false);
     static int _compactEqBars = Math.Clamp(Read(nameof(CompactEqBars), 4), 2, 8);
     static bool _miniEqualizer = ReadSwitch(nameof(MiniEqualizer), true);

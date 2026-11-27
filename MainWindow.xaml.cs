@@ -257,6 +257,7 @@ public partial class MainWindow : Window
         _hwnd = new WindowInteropHelper(this).Handle;
         Native.HideFromTaskSwitcher(_hwnd);
         Native.RegisterShellHook(_hwnd);
+        Native.RegisterDeviceNotifications(_hwnd);
         HwndSource.FromHwnd(_hwnd).AddHook(OnShellMessage);
         try
         {
