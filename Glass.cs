@@ -218,11 +218,22 @@ sealed class Glass
         }
     }
 
+    public void SyncMode()
+    {
+        if (_hwnd != IntPtr.Zero)
+        {
+            Hide();
+        }
+    }
+
     CompositionBrush TryCreateCoreBrush(Compositor compositor, CompositionBrush rawBackdrop)
     {
         try
         {
-            return LiquidGlassEffects.CreateCoreBrush(compositor, rawBackdrop, CoreBlurSigma, CoreSaturation, CoreExposure);
+            float coreBlur = Settings.Material == MaterialStyle.Matte ? 24f : 14f;
+            float coreSaturation = Settings.Material == MaterialStyle.Matte ? 1.45f : CoreSaturation;
+            float coreExposure = Settings.Material == MaterialStyle.Matte ? -0.22f : CoreExposure;
+            return LiquidGlassEffects.CreateCoreBrush(compositor, rawBackdrop, coreBlur, coreSaturation, coreExposure);
         }
         catch (Exception ex)
         {
@@ -235,7 +246,9 @@ sealed class Glass
     {
         try
         {
-            _bevelBrush = LiquidGlassEffects.CreateRefractiveRimBrush(compositor, rawBackdrop, BevelBlurSigma, BevelSaturation, BevelExposure);
+            float bevelBlur = Settings.Material == MaterialStyle.Matte ? 6.0f : BevelBlurSigma;
+            float bevelSaturation = Settings.Material == MaterialStyle.Matte ? 1.50f : BevelSaturation;
+            _bevelBrush = LiquidGlassEffects.CreateRefractiveRimBrush(compositor, rawBackdrop, bevelBlur, bevelSaturation, BevelExposure);
             _bevelHasTransform = true;
             return _bevelBrush;
         }
@@ -341,8 +354,9 @@ sealed class Glass
                     if (_bevelHasTransform && _bevelBrush != null && !pillBox.IsEmpty)
                     {
                         Point center = toPixels.Transform(new Point(pillBox.X + pillBox.Width / 2, pillBox.Y + pillBox.Height / 2));
+                        float lensScale = Settings.Material == MaterialStyle.Matte ? 1.025f : 1.085f;
                         _bevelBrush.Properties.InsertMatrix3x2("transform.TransformMatrix",
-                            Matrix3x2.CreateScale(BevelLensScale, new Vector2((float)center.X, (float)center.Y)));
+                            Matrix3x2.CreateScale(lensScale, new Vector2((float)center.X, (float)center.Y)));
                     }
                     SetOutline(_bevelOutline, ringFigures, D2D1_FILL_MODE_ALTERNATE);
                     _bevelVisual.Opacity = BevelOpacity * (Settings.GlassAmount / 100.0f);

@@ -191,8 +191,9 @@ public sealed class Segments : FrameworkElement
 
         double cell = CellWidth(w), press = Math.Max(0, _press.Value);
         double stretch = Math.Min(1, Math.Abs(_at.Velocity) / StretchSpeed);
-        double knobWidth = cell * (1 + PressedWider * press) * (1 + StretchWider * stretch);
-        double knobHeight = (h - KnobInset * 2) * (1 + PressedTaller * press) * (1 - StretchFlatter * stretch);
+        double velStretch = Math.Clamp(Math.Abs(_at.Velocity) * 0.035, 0, 0.25);
+        double knobWidth = cell * (1 + PressedWider * press) * (1 + StretchWider * stretch + velStretch * 0.35);
+        double knobHeight = (h - KnobInset * 2) * (1 + PressedTaller * press) * (1 - StretchFlatter * stretch - velStretch * 0.18);
         double cx = KnobInset + cell * (_at.Value + 0.5), cy = h / 2;
 
         var trackRect = new Rect(0, 0, w, h);
@@ -200,31 +201,21 @@ public sealed class Segments : FrameworkElement
         var knobRect = new Rect(cx - knobWidth / 2, cy - knobHeight / 2, knobWidth, knobHeight);
         double kr = Math.Min(KnobRadius * (1 + 0.15 * press), knobHeight / 2);
         Geometry knob = Squircle.Of(knobRect, kr);
-        bool glass = press > GlassShown;
 
         dc.DrawGeometry(Shades.White(TrackOpacity), null, track);
         DrawShadow(dc, knobRect, kr, knob, press);
 
-        if (glass)
-        {
-            dc.PushClip(knob);
-            double zoom = 1 + LensZoom * press;
-            dc.PushTransform(new ScaleTransform(zoom, zoom, cx, cy));
-            dc.DrawGeometry(Shades.White(TrackOpacity), null, track);
-            dc.Pop();
-            dc.DrawRectangle(Shades.White(KnobOpacity * (1 - 0.35 * press)), null, knobRect);
-            dc.DrawRectangle(Vertical((0, 0.28 * press), (0.48, 0), (1, 0.1 * press)), null, knobRect);
-            dc.Pop();
-        }
-        else
-        {
-            dc.DrawGeometry(Shades.White(KnobOpacity), null, knob);
-            dc.PushClip(knob);
-            dc.DrawRectangle(Vertical((0, 0.08), (0.5, 0), (1, 0.03)), null, knobRect);
-            dc.Pop();
-        }
+        dc.PushClip(knob);
+        double zoom = 1 + LensZoom * Math.Max(press, 0.4);
+        dc.PushTransform(new ScaleTransform(zoom, zoom, cx, cy));
+        dc.DrawGeometry(Shades.White(TrackOpacity), null, track);
+        dc.Pop();
 
-        double rimTop = 0.24 + 0.56 * press, rimMid = 0.07 + 0.16 * press, rimBot = 0.14 + 0.38 * press;
+        dc.DrawRectangle(Shades.White(KnobOpacity * (1 - 0.25 * press)), null, knobRect);
+        dc.DrawRectangle(Vertical((0, 0.25 + 0.25 * press), (0.48, 0.04), (1, 0.12 + 0.10 * press)), null, knobRect);
+        dc.Pop();
+
+        double rimTop = 0.35 + 0.45 * press, rimMid = 0.12 + 0.15 * press, rimBot = 0.20 + 0.30 * press;
         var rim = new Pen(Vertical((0, rimTop), (0.5, rimMid), (1, rimBot)), RimThickness);
         Rect rimRect = Rect.Inflate(knobRect, -RimThickness / 2, -RimThickness / 2);
         if (rimRect.Width > 0 && rimRect.Height > 0)

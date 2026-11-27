@@ -32,15 +32,17 @@ public partial class MainWindow
         TimerText.Foreground = BubbleText.Foreground = BigTimer.Foreground = BigTimerLabel.Foreground = MenuTimer.Foreground = _timerTint;
         TimerDisc.Fill = _timerTint;
         TimerPauseIcon.Fill = TimerPauseIcon.Stroke = TimerPlayIcon.Fill = TimerPlayIcon.Stroke = _timerTint;
-        TimerRing.RenderTransformOrigin = BubbleRing.RenderTransformOrigin = new Point(0.5, 0.5);
-        TimerRing.RenderTransform = BubbleRing.RenderTransform = _ringPulse;
+        TimerRing.RenderTransformOrigin = BubbleRing.RenderTransformOrigin = BigRing.RenderTransformOrigin = new Point(0.5, 0.5);
+        TimerRing.RenderTransform = BubbleRing.RenderTransform = BigRing.RenderTransform = _ringPulse;
         BigTimer.RenderTransformOrigin = new Point(1, 0.5);
-        BigTimer.RenderTransform = BigRing.RenderTransform = _bigTimerPulse;
+        BigTimer.RenderTransform = _bigTimerPulse;
     }
 
     void StartTimer(TimeSpan total)
     {
         _countdown.Start(total);
+        _timerBubbleWidth.Target = total.TotalHours >= 1 ? 98 : TimerBubbleWidth;
+        _timerBubbleWidth.Snap(_timerBubbleWidth.Target);
         BigTimerLabel.Text = "Таймер · " + DescribeDuration(total);
         _panel = Panel.None;
         SyncTimer();
@@ -97,7 +99,12 @@ public partial class MainWindow
         }
 
         double share = _countdown.RemainingShare;
-        _timerBubbleWidth.Target = left.TotalHours >= 1 ? 104 : TimerBubbleWidth;
+        double targetW = left.TotalHours >= 1 ? 98 : TimerBubbleWidth;
+        if (_timerBubbleWidth.Target != targetW)
+        {
+            _timerBubbleWidth.Target = targetW;
+            if (_bubbleSplit.Value < BarelyVisible) _timerBubbleWidth.Snap(targetW);
+        }
         TimerRing.Progress = BubbleRing.Progress = share;
         BigRing.BeginAnimation(Ring.ProgressProperty, new DoubleAnimation(share, TimerBigView.IsVisible ? TickInterval : TimeSpan.Zero));
         int seconds = (int)Math.Ceiling(left.TotalSeconds);

@@ -208,12 +208,14 @@ public partial class MainWindow
         _bubbleRecord.Target = record ? 1 : 0;
         _bubbleTimer.Target = timer ? 1 : 0;
         _bubbleShelf.Target = shelf ? 1 : 0;
+        if (timer) _timerBubbleWidth.Target = _countdown.Remaining.TotalHours >= 1 ? 98 : TimerBubbleWidth;
         if (shelf) _shelfBubbleWidth.Target = MeasureShelfBubble();
         if (_bubbleSplit.Value >= BarelyVisible) return;
 
         _bubbleRecord.Snap(_bubbleRecord.Target);
         _bubbleTimer.Snap(_bubbleTimer.Target);
         _bubbleShelf.Snap(_bubbleShelf.Target);
+        _timerBubbleWidth.Snap(_timerBubbleWidth.Target);
         _shelfBubbleWidth.Snap(_shelfBubbleWidth.Target);
     }
 
@@ -386,6 +388,7 @@ public partial class MainWindow
     {
         if (Settings.Glass)
         {
+            _glass.SyncMode();
             _glass.Show();
             Reshape();
         }
@@ -419,7 +422,8 @@ public partial class MainWindow
         double timerWidth = _timerBubbleWidth.Value;
         double wide = Math.Max(recordWidth * record + timerWidth * timer + _shelfBubbleWidth.Value * shelf - BubbleOverlap * seams, Bubble.Height);
         bool hasBubble = (_obs.Recording && _view != View.Record) || (_countdown.IsActive && _view != View.Timer) || (_shelf.Items.Count > 0);
-        bool showBubble = hasBubble && split > BubbleVisibleSplit;
+        bool apart = split > BubbleVisibleSplit;
+        bool showBubble = hasBubble && apart;
         Bubble.SetVisible(showBubble);
         Bubble.Width = wide;
         BubbleRecord.Width = Math.Max(recordWidth - 2, 0);
@@ -431,22 +435,45 @@ public partial class MainWindow
         BubbleShelf.Margin = new Thickness(0, 0, ShelfBubblePadding + (ShelfBubblePaddingWithTimer - ShelfBubblePadding) * Math.Clamp(Math.Max(timer, record), 0, 1), 0);
 
         bool splitLeft = Settings.IslandAlign == IslandAlign.Right;
-        if (splitLeft)
+
+        if (Settings.Notch)
         {
-            BubbleMove.X = pill.Left + 4;
+            if (splitLeft)
+            {
+                BubbleMove.X = pill.Left + 8;
+            }
+            else
+            {
+                double baseW = _view == View.Media ? (_compactMediaWidth + BubbleExtraWidth()) : pill.Width;
+                double restingRight = (HostWidth + baseW) / 2;
+                BubbleMove.X = restingRight - wide - 8;
+            }
+            BubbleMove.Y = (pill.Height - Bubble.Height) / 2;
+
+            // One solid island in Notch mode
+            Body.SetShape(pill, r, Rect.Empty);
+            BubbleScale.ScaleX = BubbleScale.ScaleY = 1.0;
         }
         else
         {
-            double baseW = _view == View.Media ? (_compactMediaWidth + BubbleExtraWidth()) : pill.Width;
-            double restingRight = (HostWidth + baseW) / 2;
-            BubbleMove.X = restingRight - wide - 4;
+            double tuck = Math.Max(r - Bubble.Height / 2, 0) * BubbleTuckFactor * (1 - Math.Clamp(split, 0, 1)) * scale;
+            Rect bubbleRect;
+            if (splitLeft)
+            {
+                BubbleMove.X = -(pill.Width * scale - wide) / 2 - (BubbleGap + wide) * split + tuck;
+                double past = ((BubbleGap + wide) * split - wide - tuck) / scale;
+                bubbleRect = new Rect(pill.Left - past - wide * bubble / scale, (pill.Height - Bubble.Height * bubble / scale) / 2, wide * bubble / scale, Bubble.Height * bubble / scale);
+            }
+            else
+            {
+                BubbleMove.X = (pill.Width * scale - wide) / 2 + (BubbleGap + wide) * split - tuck;
+                double past = ((BubbleGap + wide) * split - wide - tuck) / scale;
+                bubbleRect = new Rect(pill.Right + past, (pill.Height - Bubble.Height * bubble / scale) / 2, wide * bubble / scale, Bubble.Height * bubble / scale);
+            }
+            Body.SetShape(pill, r, apart && hasBubble ? bubbleRect : Rect.Empty);
+            BubbleScale.ScaleX = BubbleScale.ScaleY = bubble;
         }
-        BubbleMove.Y = (pill.Height - Bubble.Height) / 2;
 
-        // One solid island - never split into separate bubble rects
-        Body.SetShape(pill, r, Rect.Empty);
-
-        BubbleScale.ScaleX = BubbleScale.ScaleY = 1.0;
         BubbleBody.Opacity = Math.Clamp(split * 4 - 3, 0, 1);
         Bubble.IsHitTestVisible = split > BubbleClickableSplit;
     }

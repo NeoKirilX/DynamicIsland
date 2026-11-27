@@ -269,6 +269,11 @@ public partial class MainWindow
         {
             MediaView.Width = w;
             MediaView.Height = Math.Max(h, PillShapes[View.Media].Height);
+            bool splitLeft = Settings.IslandAlign == IslandAlign.Right;
+            double extra = Settings.Notch ? BubbleExtraWidth() : 0;
+            double extraLeft = splitLeft ? extra : 0;
+            double extraRight = splitLeft ? 0 : extra;
+            LyricBox.Margin = new Thickness(36 + extraLeft, 0, 41 + extraRight, 0);
             CentreLyrics();
         }
         if (_view != View.MediaBig) return;
@@ -287,24 +292,28 @@ public partial class MainWindow
 
     void PlaceCoverAndBars(Rect pill)
     {
-        double bubbleExtra = _view == View.Media ? BubbleExtraWidth() : 0;
+        bool splitLeft = Settings.IslandAlign == IslandAlign.Right;
+        double bubbleExtra = (_view == View.Media && Settings.Notch) ? BubbleExtraWidth() : 0;
+        double extraLeft = splitLeft ? bubbleExtra : 0;
+        double extraRight = splitLeft ? 0 : bubbleExtra;
+
         double baseW = _view == View.Media ? (_compactMediaWidth + bubbleExtra) : pill.Width;
         double baseLeft = (HostWidth - baseW) / 2;
         double baseRight = (HostWidth + baseW) / 2;
 
         double art = Math.Max(_coverSize.Value, 1), back = art * (1 - _coverScale.Value) / 2;
         ArtSize.ScaleX = ArtSize.ScaleY = Math.Max(art * _coverScale.Value, 1) / FullCoverSize;
-        ArtMove.X = baseLeft + _coverLeft.Value + _coverSnapX.Value + back;
+        ArtMove.X = baseLeft + extraLeft + _coverLeft.Value + _coverSnapX.Value + back;
         ArtMove.Y = _coverTop.Value + _coverSnapY.Value + back;
 
-        ArtRingMove.X = baseLeft + _coverLeft.Value + _coverSnapX.Value + (art - ArtRing.Width) / 2;
+        ArtRingMove.X = baseLeft + extraLeft + _coverLeft.Value + _coverSnapX.Value + (art - ArtRing.Width) / 2;
         ArtRingMove.Y = _coverTop.Value + _coverSnapY.Value + (art - ArtRing.Height) / 2;
         UpdateArtRingOpacity(art);
 
         double glowAlpha = Math.Clamp(_barsOpen.Value, 0, 1) * 0.34 * (_cover != null ? _coverScale.Value : 0);
         ArtGlow.Opacity = glowAlpha;
         ArtGlowScale.ScaleX = ArtGlowScale.ScaleY = Math.Max(_coverScale.Value, 0.5);
-        ArtGlowMove.X = baseLeft + _coverLeft.Value + (art - ArtGlow.Width) / 2;
+        ArtGlowMove.X = baseLeft + extraLeft + _coverLeft.Value + (art - ArtGlow.Width) / 2;
         ArtGlowMove.Y = _coverTop.Value + (art - ArtGlow.Height) / 2 + 4;
 
         double eqW = Math.Max(_barsWidth.Value, 1), eqH = Math.Max(_barsHeight.Value, 1);
@@ -318,7 +327,7 @@ public partial class MainWindow
             ? (Settings.CompactEqualizer ? 1.0 : 0.0) 
             : (Settings.MiniEqualizer ? 1.0 : 0.0);
         Eq.Opacity = eqAlpha;
-        EqMove.X = baseRight - bubbleExtra - _barsRight.Value - eqW;
+        EqMove.X = baseRight - extraRight - _barsRight.Value - eqW;
         EqMove.Y = _barsCenterY.Value - eqH / 2;
     }
 

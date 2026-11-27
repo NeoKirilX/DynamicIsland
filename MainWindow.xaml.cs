@@ -33,9 +33,9 @@ public partial class MainWindow : Window
         [View.Notice] = new(320, 64, 29),
         [View.MediaBig] = new(380, PlayerHeight, 40),
         [View.IdleBig] = new(320, 124, 38),
-        [View.TimerBig] = new(340, 96, 32),
+        [View.TimerBig] = new(368, 96, 32),
         [View.TimerSet] = new(320, 220, 38),
-        [View.RecordBig] = new(350, 96, 32),
+        [View.RecordBig] = new(370, 96, 32),
         [View.RecordSet] = new(320, 92, 40),
         [View.Menu] = new(300, 390, 34),
         [View.Settings] = new(332, 410, 34),
@@ -367,12 +367,13 @@ public partial class MainWindow : Window
 
     double BubbleExtraWidth()
     {
+        if (!Settings.Notch) return 0;
         double record = _obs.Recording && _view != View.Record ? _recordBubbleWidth.Target : 0;
         double timer = _countdown.IsActive && _view != View.Timer ? _timerBubbleWidth.Target : 0;
         double shelf = _shelf.Items.Count > 0 ? _shelfBubbleWidth.Target : 0;
         double seams = (record > 0 && timer > 0 ? 1 : 0) + (timer > 0 && shelf > 0 ? 1 : 0);
         double extra = record + timer + shelf - (seams * BubbleOverlap);
-        return extra > 0 ? extra : 0;
+        return extra > 0 ? extra + 12 : 0;
     }
 
     IntPtr OnShellMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -652,6 +653,8 @@ public partial class MainWindow : Window
         View.Idle => PillShapes[view] with { Width = HasIdleWeather ? 172 : 118 },
         View.Media => PillShapes[view] with { Width = _compactMediaWidth + BubbleExtraWidth() },
         View.Timer => PillShapes[view] with { Width = _countdown.Remaining.TotalHours >= 1 ? 148 : 132 },
+        View.TimerBig => PillShapes[view] with { Width = _countdown.Remaining.TotalHours >= 1 ? 368 : 340 },
+        View.RecordBig => PillShapes[view] with { Width = _obs.Elapsed.TotalHours >= 1 ? 376 : 350 },
         View.MediaBig when _playerHasLyricRoom => PillShapes[view] with { Height = PlayerHeight + PlayerLyricsHeight },
         View.RecordSet => PillShapes[view] with { Width = RecordSetView.Width },
         View.Update => PillShapes[view] with { Height = UpdatePage.Height },

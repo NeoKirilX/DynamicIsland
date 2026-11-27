@@ -823,13 +823,13 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="TimerBigView" Width="340" Height="96" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="TimerBigView" Width="368" Height="96" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:Puddle Height="64" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="24,0,0,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Style="{StaticResource IconButton}" Width="52" Height="52" Click="TimerToggle_Click">
                             <Grid Width="46" Height="46">
                                 <local:Ring x:Name="BigRing" Thickness="3" RenderTransformOrigin="0.5,0.5"/>
-                                <Ellipse x:Name="TimerDisc" Margin="4" Opacity="0.25"/>
+                                <Ellipse x:Name="TimerDisc" Margin="1" Opacity="0.25"/>
                                 <Path x:Name="TimerPauseIcon" Data="M1,1 H5 V15 H1 Z M10,1 H14 V15 H10 Z"
                                       StrokeThickness="2" StrokeLineJoin="Round"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -840,7 +840,7 @@
                         </Button>
                         <Button Style="{StaticResource IconButton}" Width="52" Height="52" Margin="8,0,0,0" Click="TimerCancel_Click">
                             <Grid Width="46" Height="46">
-                                <Ellipse Fill="#2EFFFFFF"/>
+                                <Ellipse Fill="#2EFFFFFF" Margin="1"/>
                                 <Path Data="M1,1 L13,13 M13,1 L1,13" Stroke="White" StrokeThickness="2.4"
                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -905,18 +905,18 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="RecordBigView" Width="350" Height="96" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="RecordBigView" Width="370" Height="96" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:Puddle Height="64" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="24,0,0,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Style="{StaticResource IconButton}" Width="52" Height="52" local:Puddle.Tint="#FF453A" Click="RecordStop_Click">
                             <Grid Width="46" Height="46">
-                                <Ellipse Fill="{StaticResource Red}" Opacity="0.25"/>
+                                <Ellipse Fill="{StaticResource Red}" Opacity="0.25" Margin="1"/>
                                 <Rectangle Width="16" Height="16" RadiusX="4" RadiusY="4" Fill="{StaticResource Red}"/>
                             </Grid>
                         </Button>
                         <Button x:Name="RecordPauseButton" Style="{StaticResource IconButton}" Width="52" Height="52" Margin="8,0,0,0" Click="RecordPause_Click">
                             <Grid Width="46" Height="46">
-                                <Ellipse x:Name="RecordPauseDisc" Fill="#2EFFFFFF"/>
+                                <Ellipse x:Name="RecordPauseDisc" Fill="#2EFFFFFF" Margin="1"/>
                                 <Path x:Name="RecordPauseIcon" Data="M1,1 H5 V15 H1 Z M10,1 H14 V15 H10 Z" Fill="White" Stroke="White"
                                       StrokeThickness="2" StrokeLineJoin="Round"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1527,6 +1527,13 @@
                                         <local:Toggle x:Name="GlassSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>
                                 </Button>
+                                <Button x:Name="GlassModeRow" Style="{StaticResource RowButton}" Click="GlassMode_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Режим стекла"/>
+                                        <local:Segments x:Name="GlassModeSegments" Style="{StaticResource RowSegments}" Labels="Жидкое|Материальное"/>
+                                    </Grid>
+                                </Button>
                                 <Grid Height="34" Margin="12,0">
                                     <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
                                     <TextBlock Style="{StaticResource RowLabel}" Text="Сила стекла"/>
@@ -1976,9 +1983,26 @@
                     <Grid.RenderTransform>
                         <TransformGroup>
                             <ScaleTransform x:Name="LanguageModalScale" CenterX="155" CenterY="205"/>
+                            <TranslateTransform x:Name="LanguageModalMove"/>
                         </TransformGroup>
                     </Grid.RenderTransform>
-                    <Border Background="#F2121218" CornerRadius="28" BorderBrush="#33FFFFFF" BorderThickness="1" ClipToBounds="True">
+                    <Border CornerRadius="28" BorderThickness="1" ClipToBounds="True">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#F01C1F2E" Offset="0"/>
+                                <GradientStop Color="#E612141F" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.BorderBrush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#80FFFFFF" Offset="0"/>
+                                <GradientStop Color="#26FFFFFF" Offset="0.45"/>
+                                <GradientStop Color="#4DFFFFFF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.BorderBrush>
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="28" ShadowDepth="12" Direction="270" Color="Black" Opacity="0.55"/>
+                        </Border.Effect>
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="50"/>
@@ -2002,7 +2026,9 @@
                             </ScrollViewer>
                         </Grid>
                     </Border>
+
                 </Grid>
+
 
             <!-- iOS Modal Coordinate Confirmation Alert -->
             <Grid x:Name="CoordConfirmOverlay" Visibility="Collapsed" IsHitTestVisible="False"
@@ -2089,6 +2115,7 @@
 
 
         </Grid>
+
             </Grid>
 
             <Canvas x:Name="Shared" Visibility="Collapsed" Opacity="0">

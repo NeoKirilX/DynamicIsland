@@ -186,27 +186,25 @@ public sealed class Scrubber : FrameworkElement
         bool glass = press > GlassShown;
 
         dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, w, h));
-        dc.DrawGeometry(Shades.White(TrackOpacity), null, glass ? Geometry.Combine(track, knob, GeometryCombineMode.Exclude, null) : track);
-        dc.DrawGeometry(Shades.White(FillOpacity), null, glass ? Geometry.Combine(fill, knob, GeometryCombineMode.Exclude, null) : fill);
+        dc.DrawGeometry(Shades.White(TrackOpacity), null, Geometry.Combine(track, knob, GeometryCombineMode.Exclude, null));
+        dc.DrawGeometry(Shades.White(FillOpacity), null, Geometry.Combine(fill, knob, GeometryCombineMode.Exclude, null));
         DrawShadow(dc, knobRect, knob, press);
 
-        if (!glass)
-        {
-            dc.DrawGeometry(Brushes.White, null, knob);
-            return;
-        }
-
         dc.PushClip(knob);
-        double zoom = 1 + LensZoom * press;
+        double zoom = 1 + LensZoom * (0.35 + 0.65 * press);
         dc.PushTransform(new ScaleTransform(zoom, zoom * LensZoomTaller, cx, cy));
         dc.DrawGeometry(Shades.White(TrackOpacity), null, track);
         dc.DrawGeometry(Shades.White(FillOpacity), null, fill);
         dc.Pop();
-        dc.DrawRectangle(new SolidColorBrush(White(1 - GlassClearing * press)), null, knobRect);
-        dc.DrawRectangle(Vertical((0, 0.35 * press), (0.45, 0), (1, 0.12 * press)), null, knobRect);
+
+        // Liquid glass body fill (frosted pearlescent white)
+        dc.DrawRectangle(new SolidColorBrush(White(0.88 - 0.45 * press)), null, knobRect);
+        // Specular top light reflection
+        dc.DrawRectangle(Vertical((0, 0.45 + 0.35 * press), (0.45, 0.08), (1, 0.20 + 0.15 * press)), null, knobRect);
         dc.Pop();
 
-        var rim = new Pen(Vertical((0, 0.85 * press), (0.5, 0.25 * press), (1, 0.6 * press)), RimThickness);
+        // Specular bevel rim
+        var rim = new Pen(Vertical((0, 0.75 + 0.20 * press), (0.5, 0.25 + 0.15 * press), (1, 0.50 + 0.25 * press)), RimThickness);
         var rimRect = Rect.Inflate(knobRect, -RimThickness / 2, -RimThickness / 2);
         dc.DrawRoundedRectangle(null, rim, rimRect, rimRect.Height / 2, rimRect.Height / 2);
     }

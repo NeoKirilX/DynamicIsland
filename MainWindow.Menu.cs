@@ -483,6 +483,13 @@ public partial class MainWindow
         SyncGlass(true);
     }
 
+    void GlassMode_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.Material = GlassModeSegments.PickUnderPointer() == 1 ? MaterialStyle.Matte : MaterialStyle.Liquid;
+        RefreshLookPage();
+        SyncGlass(true);
+    }
+
     void SeekStyle_Click(object sender, RoutedEventArgs e)
     {
         Settings.LineBar = SeekStyleSegments.PickUnderPointer() == 1;
@@ -999,6 +1006,7 @@ public partial class MainWindow
         SeekGlowSwitch.Set(Settings.SeekGlow, LookView.IsVisible);
         CompactProgressSegments.Set((int)Settings.CompactProgress, LookView.IsVisible);
         GlassSwitch.Set(Settings.Glass, LookView.IsVisible);
+        GlassModeSegments.Set(Settings.Material == MaterialStyle.Matte ? 1 : 0, LookView.IsVisible);
         GlassAmountSlider.Set(Settings.GlassAmount, LookView.IsVisible);
         GlassAmountText.Text = Settings.GlassAmount + "%";
         TextScaleSlider.Set(Settings.TextScale, LookView.IsVisible);
@@ -1085,13 +1093,16 @@ public partial class MainWindow
         PopulateLanguageList();
         LanguageModal.Visibility = Visibility.Visible;
         LanguageModal.Opacity = 0;
-        LanguageModalScale.ScaleX = LanguageModalScale.ScaleY = 0.5;
+        LanguageModalScale.ScaleX = LanguageModalScale.ScaleY = 0.85;
+        LanguageModalMove.Y = -24;
 
-        var ease = new BackEase { Amplitude = 0.3, EasingMode = EasingMode.EaseOut };
+        var ease = new BackEase { Amplitude = 0.25, EasingMode = EasingMode.EaseOut };
         var scaleAnim = new DoubleAnimation(1.0, Ms(320)) { EasingFunction = ease };
-        var fadeAnim = new DoubleAnimation(1.0, Ms(200));
+        var moveAnim = new DoubleAnimation(0, Ms(320)) { EasingFunction = ease };
+        var fadeAnim = new DoubleAnimation(1.0, Ms(220));
 
         LanguageModal.BeginAnimation(OpacityProperty, fadeAnim);
+        LanguageModalMove.BeginAnimation(TranslateTransform.YProperty, moveAnim);
         LanguageModalScale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
         LanguageModalScale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
     }
@@ -1099,11 +1110,13 @@ public partial class MainWindow
     void LanguageModal_Close(object sender, RoutedEventArgs e)
     {
         var ease = new CubicEase { EasingMode = EasingMode.EaseIn };
-        var scaleAnim = new DoubleAnimation(0.6, Ms(180)) { EasingFunction = ease };
+        var scaleAnim = new DoubleAnimation(0.85, Ms(180)) { EasingFunction = ease };
+        var moveAnim = new DoubleAnimation(-16, Ms(180)) { EasingFunction = ease };
         var fadeAnim = new DoubleAnimation(0.0, Ms(160));
         scaleAnim.Completed += (_, _) => LanguageModal.Visibility = Visibility.Collapsed;
 
         LanguageModal.BeginAnimation(OpacityProperty, fadeAnim);
+        LanguageModalMove.BeginAnimation(TranslateTransform.YProperty, moveAnim);
         LanguageModalScale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
         LanguageModalScale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
     }
@@ -1147,6 +1160,17 @@ public partial class MainWindow
                 grid.Children.Add(check);
             }
 
+            btn.MouseEnter += (s, _) =>
+            {
+                if ((string)btn.Tag != Settings.Language)
+                    btn.Background = new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF));
+            };
+            btn.MouseLeave += (s, _) =>
+            {
+                if ((string)btn.Tag != Settings.Language)
+                    btn.Background = Brushes.Transparent;
+            };
+
             btn.Content = grid;
             btn.Click += (s, e) =>
             {
@@ -1159,7 +1183,7 @@ public partial class MainWindow
 
             var template = new ControlTemplate(typeof(Button));
             var factory = new FrameworkElementFactory(typeof(Border));
-            factory.SetValue(Border.CornerRadiusProperty, new CornerRadius(10));
+            factory.SetValue(Border.CornerRadiusProperty, new CornerRadius(12));
             factory.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding("Background") { Source = btn });
             var contentFactory = new FrameworkElementFactory(typeof(ContentPresenter));
             factory.AppendChild(contentFactory);

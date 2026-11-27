@@ -175,9 +175,13 @@ public partial class MainWindow
     void CentreLyrics()
     {
         MediaView.UpdateLayout();
-        double boxLeft = VisualTreeHelper.GetOffset(MediaView).X + VisualTreeHelper.GetOffset(LyricBox).X;
-        LyricA.Centring.X = (HostWidth - LyricA.IslandWidth) / 2 + LyricBox.Margin.Left - boxLeft;
-        LyricB.Centring.X = (HostWidth - LyricB.IslandWidth) / 2 + LyricBox.Margin.Left - boxLeft;
+        bool splitLeft = Settings.IslandAlign == IslandAlign.Right;
+        double baseW = _compactMediaWidth + (Settings.Notch ? BubbleExtraWidth() : 0);
+        double extraLeft = (Settings.Notch && splitLeft) ? BubbleExtraWidth() : 0;
+        double targetBoxLeft = (HostWidth - baseW) / 2 + 36 + extraLeft;
+        double currentBoxLeft = VisualTreeHelper.GetOffset(MediaView).X + VisualTreeHelper.GetOffset(LyricBox).X;
+        LyricA.Centring.X = targetBoxLeft - currentBoxLeft;
+        LyricB.Centring.X = targetBoxLeft - currentBoxLeft;
     }
 
     static DoubleAnimationUsingKeyFrames CreateLyricScroll(double overflow, double seconds)
