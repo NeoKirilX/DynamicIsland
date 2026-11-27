@@ -188,7 +188,7 @@ public partial class MainWindow
     void Shadow_Click(object sender, RoutedEventArgs e)
     {
         Settings.Shadow = !Settings.Shadow;
-        UpdateSwitches(true);
+        RefreshLookPage();
         StartShapeLoop();
     }
 
@@ -325,10 +325,11 @@ public partial class MainWindow
             ComboCounterStyle.Progress => "1/4",
             _ => "х1",
         };
-        ShadowSwitch.Set(Settings.Shadow, animate);
         SystemStatsSwitch.Set(Settings.SystemStats, animate);
         ClickLockSwitch.Set(Settings.ClickLock, animate);
         CapitalizeSwitch.Set(Settings.CapitalizeTitle, animate);
+        InvertGestureSwitch.Set(Settings.InvertMediaGesture, animate);
+        ShowArtistSwitch.Set(Settings.ShowTrackArtist, animate);
         ObsSwitch.Set(Settings.Obs, animate);
         LanguageText.Text = Settings.Language.ToUpperInvariant();
         AppVolumeSwitch.Set(Settings.AppVolume, animate);
@@ -459,13 +460,13 @@ public partial class MainWindow
     void InvertGesture_Click(object sender, RoutedEventArgs e)
     {
         Settings.InvertMediaGesture = !Settings.InvertMediaGesture;
-        RefreshLookPage();
+        UpdateSwitches(true);
     }
 
     void ShowArtist_Click(object sender, RoutedEventArgs e)
     {
         Settings.ShowTrackArtist = !Settings.ShowTrackArtist;
-        RefreshLookPage();
+        UpdateSwitches(true);
         OnMediaChanged();
     }
 
@@ -893,8 +894,7 @@ public partial class MainWindow
         LookRimSwitch.Set(Settings.Rim, LookView.IsVisible);
         MaxIslandWidthSlider.Set(Settings.MaxIslandWidth, LookView.IsVisible);
         MaxIslandWidthText.Text = $"{Settings.MaxIslandWidth} px";
-        InvertGestureSwitch.Set(Settings.InvertMediaGesture, LookView.IsVisible);
-        ShowArtistSwitch.Set(Settings.ShowTrackArtist, LookView.IsVisible);
+        ShadowSwitch.Set(Settings.Shadow, LookView.IsVisible);
         ((RadioButton)BackdropStrip.Children[(int)Settings.Backdrop]).IsChecked = true;
         ((RadioButton)LyricChangeStrip.Children[(int)Settings.LyricChange]).IsChecked = true;
         ((RadioButton)HoverStrip.Children[(int)Settings.Hover]).IsChecked = true;
