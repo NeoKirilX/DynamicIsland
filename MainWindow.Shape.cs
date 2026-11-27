@@ -61,7 +61,7 @@ public partial class MainWindow
         _width.Target = shape.Width + pull * PullWidening + leanExtra;
         _height.Target = shape.Height + pull;
         _radius.Target = shape.Radius + pull * PullRounding;
-        _leanX.Target = _grab == Grab.Lean ? Math.Sign(_leanDrag) * (leanExtra / 2.0) : 0;
+        _leanX.Target = 0;
         if (MediaSpots.TryGetValue(_view, out MediaSpot spot))
         {
             _coverTop.Target = spot.CoverTop + pull / 2;
@@ -223,6 +223,10 @@ public partial class MainWindow
         bool moving = false;
         foreach (Spring spring in _springs) moving |= spring.Advance(dt);
         moving |= Body.Advance(dt);
+        if (_userScale.Moving && Settings.IslandAlign != IslandAlign.Center)
+        {
+            RepositionWindow();
+        }
         ApplyShape();
         if (!moving) EndMorph();
         return moving || IsLyricSettling || Body.IsRimActive;
@@ -232,7 +236,16 @@ public partial class MainWindow
     {
         double w = Math.Max(_width.Value, MinPillSize), h = Math.Max(_height.Value, MinPillSize);
         double r = Math.Clamp(_radius.Value, 0, Math.Min(w, h) / 2);
-        var pill = new Rect((HostWidth - w) / 2, 0, w, h);
+        double baseW = _view == View.Media ? _compactMediaWidth : ShapeOf(_view).Width;
+        double pillLeft = (HostWidth - w) / 2;
+        if (_grab == Grab.Lean && IsMediaActive)
+        {
+            if (_leanDrag > 0)
+                pillLeft = (HostWidth - baseW) / 2;
+            else if (_leanDrag < 0)
+                pillLeft = (HostWidth + baseW) / 2 - w;
+        }
+        var pill = new Rect(pillLeft, 0, w, h);
         double scale = Math.Max(_scale.Value, MinScale), size = Math.Max(_userScale.Value, MinScale);
         double dpi = VisualTreeHelper.GetDpi(this).DpiScaleY;
 
@@ -302,18 +315,18 @@ public partial class MainWindow
         double rightAlpha = leaning && _leanDrag > 0 ? leanProgress : 0;
         LeanRightHint.Opacity = rightAlpha;
         LeanRightScale.ScaleX = LeanRightScale.ScaleY = hintScale;
-        LeanRightMove.X = pill.Right - LeanRightHint.Width - 4;
+        LeanRightMove.X = pill.Right - LeanRightHint.Width - 6;
         LeanRightMove.Y = (pill.Height - LeanRightHint.Height) / 2;
-        LeanRightIcon.Kind = invert ? Glyph.Back : Glyph.Chevron;
+        LeanRightIcon.Kind = Glyph.Chevron;
         LeanRightIcon.Fill = leanReady && _leanDrag > 0 ? _accentBrush : Brushes.White;
 
         // Hint for drag LEFT: placed in the expanded space on the left side
         double leftAlpha = leaning && _leanDrag < 0 ? leanProgress : 0;
         LeanLeftHint.Opacity = leftAlpha;
         LeanLeftScale.ScaleX = LeanLeftScale.ScaleY = hintScale;
-        LeanLeftMove.X = pill.Left + 4;
+        LeanLeftMove.X = pill.Left + 6;
         LeanLeftMove.Y = (pill.Height - LeanLeftHint.Height) / 2;
-        LeanLeftIcon.Kind = invert ? Glyph.Chevron : Glyph.Back;
+        LeanLeftIcon.Kind = Glyph.Back;
         LeanLeftIcon.Fill = leanReady && _leanDrag < 0 ? _accentBrush : Brushes.White;
 
         double handleAlpha = Math.Clamp(_pullHandleAlpha.Value, 0, 1);
@@ -422,15 +435,27 @@ public partial class MainWindow
         BubbleShelf.Opacity = Math.Clamp(shelf * 2 - 1, 0, 1);
         BubbleShelf.Margin = new Thickness(0, 0, ShelfBubblePadding + (ShelfBubblePaddingWithTimer - ShelfBubblePadding) * Math.Clamp(Math.Max(timer, record), 0, 1), 0);
         double tuck = Math.Max(r - Bubble.Height / 2, 0) * BubbleTuckFactor * (1 - Math.Clamp(split, 0, 1)) * scale;
-        BubbleMove.X = (pill.Width * scale - wide) / 2 + (BubbleGap + wide) * split - tuck;
+
+        bool splitLeft = Settings.IslandAlign == IslandAlign.Right;
+        if (splitLeft)
+        {
+            BubbleMove.X = -(pill.Width * scale - wide) / 2 - (BubbleGap + wide) * split + tuck;
+            double past = ((BubbleGap + wide) * split - wide - tuck) / scale;
+            Body.SetShape(pill, r, apart
+                ? new Rect(pill.Left - past - wide * bubble / scale, 0, wide * bubble / scale, Bubble.Height * bubble / scale)
+                : Rect.Empty);
+        }
+        else
+        {
+            BubbleMove.X = (pill.Width * scale - wide) / 2 + (BubbleGap + wide) * split - tuck;
+            double past = ((BubbleGap + wide) * split - wide - tuck) / scale;
+            Body.SetShape(pill, r, apart
+                ? new Rect(pill.Right + past, 0, wide * bubble / scale, Bubble.Height * bubble / scale)
+                : Rect.Empty);
+        }
         BubbleScale.ScaleX = BubbleScale.ScaleY = bubble;
         BubbleBody.Opacity = Math.Clamp(split * 4 - 3, 0, 1);
         Bubble.IsHitTestVisible = split > BubbleClickableSplit;
-
-        double past = ((BubbleGap + wide) * split - wide - tuck) / scale;
-        Body.SetShape(pill, r, apart
-            ? new Rect(pill.Right + past, 0, wide * bubble / scale, Bubble.Height * bubble / scale)
-            : Rect.Empty);
     }
 
     void FitViews(double w, double h)

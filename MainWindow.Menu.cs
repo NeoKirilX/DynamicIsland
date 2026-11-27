@@ -795,17 +795,31 @@ public partial class MainWindow
 
     void PosXSlider_Changed(object? sender, EventArgs e)
     {
+        double oldLeft = Left;
         Settings.PosX = (int)PosXSlider.Value;
         PosXText.Text = Settings.PosX + (Native.IsShiftDown ? " px [1px]" : " px");
         ApplyLook();
+        double delta = Left - oldLeft;
+        if (Math.Abs(delta) > 0.05)
+        {
+            double dpi = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            Native.MoveCursorBy((int)Math.Round(delta * dpi), 0);
+        }
         CheckCoordinateSafety();
     }
 
     void PosYSlider_Changed(object? sender, EventArgs e)
     {
+        double oldTop = Top;
         Settings.PosY = (int)PosYSlider.Value;
         PosYText.Text = Settings.PosY + (Native.IsShiftDown ? " px [1px]" : " px");
         ApplyLook();
+        double delta = Top - oldTop;
+        if (Math.Abs(delta) > 0.05)
+        {
+            double dpi = VisualTreeHelper.GetDpi(this).DpiScaleY;
+            Native.MoveCursorBy(0, (int)Math.Round(delta * dpi));
+        }
         CheckCoordinateSafety();
     }
 

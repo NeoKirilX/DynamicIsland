@@ -17,6 +17,7 @@ sealed class Spring
     public double Target { get; set; }
     public double Stiffness { get; private set; }
     public double Damping { get; private set; }
+    public bool Moving => Math.Abs(Value - Target) >= RestDistance || Math.Abs(Velocity) >= RestVelocity;
 
     public void Tune(double stiffness, double damping)
     {

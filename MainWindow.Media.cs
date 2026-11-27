@@ -287,26 +287,30 @@ public partial class MainWindow
 
     void PlaceCoverAndBars(Rect pill)
     {
+        double baseW = _view == View.Media ? _compactMediaWidth : pill.Width;
+        double baseLeft = (HostWidth - baseW) / 2;
+        double baseRight = (HostWidth + baseW) / 2;
+
         double art = Math.Max(_coverSize.Value, 1), back = art * (1 - _coverScale.Value) / 2;
         ArtSize.ScaleX = ArtSize.ScaleY = Math.Max(art * _coverScale.Value, 1) / FullCoverSize;
-        ArtMove.X = pill.Left + _coverLeft.Value + _coverSnapX.Value + back;
+        ArtMove.X = baseLeft + _coverLeft.Value + _coverSnapX.Value + back;
         ArtMove.Y = _coverTop.Value + _coverSnapY.Value + back;
 
-        ArtRingMove.X = pill.Left + _coverLeft.Value + _coverSnapX.Value + (art - ArtRing.Width) / 2;
+        ArtRingMove.X = baseLeft + _coverLeft.Value + _coverSnapX.Value + (art - ArtRing.Width) / 2;
         ArtRingMove.Y = _coverTop.Value + _coverSnapY.Value + (art - ArtRing.Height) / 2;
         UpdateArtRingOpacity(art);
 
         double glowAlpha = Math.Clamp(_barsOpen.Value, 0, 1) * 0.34 * (_cover != null ? _coverScale.Value : 0);
         ArtGlow.Opacity = glowAlpha;
         ArtGlowScale.ScaleX = ArtGlowScale.ScaleY = Math.Max(_coverScale.Value, 0.5);
-        ArtGlowMove.X = pill.Left + _coverLeft.Value + (art - ArtGlow.Width) / 2;
+        ArtGlowMove.X = baseLeft + _coverLeft.Value + (art - ArtGlow.Width) / 2;
         ArtGlowMove.Y = _coverTop.Value + (art - ArtGlow.Height) / 2 + 4;
 
         double eqW = Math.Max(_barsWidth.Value, 1), eqH = Math.Max(_barsHeight.Value, 1);
         Eq.Width = eqW;
         Eq.Height = eqH;
         Eq.Open = _barsOpen.Value;
-        EqMove.X = pill.Right - _barsRight.Value - eqW;
+        EqMove.X = baseRight - _barsRight.Value - eqW;
         EqMove.Y = _barsCenterY.Value - eqH / 2;
     }
 

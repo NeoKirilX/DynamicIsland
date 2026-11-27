@@ -83,6 +83,7 @@ static class Native
     [DllImport("user32.dll")] static extern IntPtr GetDesktopWindow();
     [DllImport("user32.dll")] static extern IntPtr GetShellWindow();
     [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
+    [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
     [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
     [DllImport("user32.dll")] static extern IntPtr MonitorFromPoint(POINT point, uint flags);
@@ -113,6 +114,14 @@ static class Native
     public static void BringForward(IntPtr hwnd) => SetForegroundWindow(hwnd);
 
     public static Point CursorPosition => GetCursorPos(out POINT at) ? new Point(at.X, at.Y) : default;
+
+    public static void MoveCursorBy(int dx, int dy)
+    {
+        if (GetCursorPos(out POINT pt))
+        {
+            SetCursorPos(pt.X + dx, pt.Y + dy);
+        }
+    }
 
     public static bool IsCtrlDown => GetAsyncKeyState(VK_CONTROL) < 0;
 

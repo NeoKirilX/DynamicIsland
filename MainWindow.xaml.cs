@@ -330,7 +330,7 @@ public partial class MainWindow : Window
     {
         double screenW = SystemParameters.PrimaryScreenWidth;
         double screenH = SystemParameters.PrimaryScreenHeight;
-        double size = _userScale != null ? Math.Max(_userScale.Value, MinScale) : 1;
+        double size = _userScale != null ? Math.Max(_userScale.Value, MinScale) : (Settings.Scale / 100.0);
         double pillW = (_width != null ? Math.Max(_width.Value, MinPillSize) : 172) * size;
         double pillH = (_height != null ? Math.Max(_height.Value, MinPillSize) : 34) * size;
 
@@ -338,12 +338,12 @@ public partial class MainWindow : Window
         switch (Settings.IslandAlign)
         {
             case IslandAlign.Left:
-                minX = -20;
-                maxX = (int)Math.Max(screenW - 20 - pillW, -20);
+                minX = 0;
+                maxX = (int)Math.Max(screenW - pillW, 0);
                 break;
             case IslandAlign.Right:
-                minX = (int)Math.Min(-(screenW - 20 - pillW), 20);
-                maxX = 20;
+                minX = -(int)Math.Max(screenW - pillW, 0);
+                maxX = 0;
                 break;
             default: // Center
                 int maxRange = (int)Math.Max((screenW - pillW) / 2.0, 0);
@@ -353,7 +353,7 @@ public partial class MainWindow : Window
         }
 
         Settings.PosX = Math.Clamp(Settings.PosX, minX, maxX);
-        Settings.PosY = Math.Clamp(Settings.PosY, 0, (int)Math.Max(screenH - pillH - 20, 0));
+        Settings.PosY = Math.Clamp(Settings.PosY, 0, (int)Math.Max(screenH - pillH, 0));
 
         if (PosXSlider != null)
         {
@@ -364,7 +364,7 @@ public partial class MainWindow : Window
         if (PosYSlider != null)
         {
             PosYSlider.Minimum = 0;
-            PosYSlider.Maximum = (int)Math.Max(screenH - pillH - 20, 0);
+            PosYSlider.Maximum = (int)Math.Max(screenH - pillH, 0);
             PosYSlider.Set(Settings.PosY, LookView?.IsVisible ?? false);
         }
     }
@@ -374,10 +374,11 @@ public partial class MainWindow : Window
     public void RepositionWindow()
     {
         double screenW = SystemParameters.PrimaryScreenWidth;
+        double size = _userScale != null ? Math.Max(_userScale.Value, MinScale) : (Settings.Scale / 100.0);
         double targetLeft = Settings.IslandAlign switch
         {
-            IslandAlign.Left => (20 + Settings.PosX) - (Width - HostWidth) / 2.0,
-            IslandAlign.Right => (screenW - 20 + Settings.PosX) - Width + (Width - HostWidth) / 2.0,
+            IslandAlign.Left => Settings.PosX - (Width - HostWidth * size) / 2.0,
+            IslandAlign.Right => (screenW + Settings.PosX) - (Width + HostWidth * size) / 2.0,
             _ => (screenW - Width) / 2.0 + Settings.PosX
         };
         Left = targetLeft;
