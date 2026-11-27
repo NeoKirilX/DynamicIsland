@@ -33,9 +33,9 @@ public partial class MainWindow : Window
         [View.Notice] = new(320, 64, 29),
         [View.MediaBig] = new(380, PlayerHeight, 40),
         [View.IdleBig] = new(320, 124, 38),
-        [View.TimerBig] = new(330, 92, 40),
+        [View.TimerBig] = new(340, 96, 32),
         [View.TimerSet] = new(320, 220, 38),
-        [View.RecordBig] = new(340, 92, 40),
+        [View.RecordBig] = new(350, 96, 32),
         [View.RecordSet] = new(320, 92, 40),
         [View.Menu] = new(300, 390, 34),
         [View.Settings] = new(332, 410, 34),
@@ -46,7 +46,7 @@ public partial class MainWindow : Window
         [View.Qr] = new(330, 220, 34),
         [View.Update] = new(320, 150, 34),
         [View.Lyrics] = new(352, 380, 34),
-        [View.Notifications] = new(352, 380, 34),
+        [View.Notifications] = new(352, 430, 34),
         [View.Loading] = new(118, 34, 17),
     };
 
@@ -64,7 +64,7 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1),
     };
 
-    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.RecordSet, View.RecordBig, View.Shelf, View.Weather, View.Qr];
+    static readonly View[] MenuPages = [View.Settings, View.Look, View.Notifications, View.TimerSet, View.TimerBig, View.RecordSet, View.RecordBig, View.Shelf, View.Weather, View.Qr];
 
     static readonly View[] SettingsPages = [View.Update, View.Lyrics, View.Notifications];
 
@@ -256,7 +256,16 @@ public partial class MainWindow : Window
         base.OnSourceInitialized(e);
         _hwnd = new WindowInteropHelper(this).Handle;
         Native.HideFromTaskSwitcher(_hwnd);
-        if (Native.RegisterShellHook(_hwnd)) HwndSource.FromHwnd(_hwnd).AddHook(OnShellMessage);
+        Native.RegisterShellHook(_hwnd);
+        HwndSource.FromHwnd(_hwnd).AddHook(OnShellMessage);
+        try
+        {
+            foreach (var d in System.IO.DriveInfo.GetDrives())
+            {
+                if (d.IsReady) _knownDrives.Add(d.Name);
+            }
+        }
+        catch {}
     }
 
     protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
@@ -274,8 +283,85 @@ public partial class MainWindow : Window
 
     SolidColorBrush BrushResource(string key) => (SolidColorBrush)FindResource(key);
 
+    const int WM_DEVICECHANGE = 0x0219;
+    const int DBT_DEVICEARRIVAL = 0x8000;
+    const int DBT_DEVICEREMOVECOMPLETE = 0x8004;
+    readonly HashSet<string> _knownDrives = new(StringComparer.OrdinalIgnoreCase);
+
+    void OnDeviceArrival()
+    {
+        Dispatcher.InvokeAsync(async () =>
+        {
+            await Task.Delay(600);
+            if (!Settings.NotifyDrive) return;
+            try
+            {
+                var currentDrives = System.IO.DriveInfo.GetDrives();
+                foreach (var d in currentDrives)
+                {
+                    if (!_knownDrives.Contains(d.Name))
+                    {
+                        _knownDrives.Add(d.Name);
+                        string label = "";
+                        string sizeStr = "";
+                        try
+                        {
+                            if (d.IsReady)
+                            {
+                                label = string.IsNullOrWhiteSpace(d.VolumeLabel) ? "Накопитель" : d.VolumeLabel;
+                                double gb = d.TotalSize / (1024.0 * 1024 * 1024);
+                                sizeStr = gb >= 1 ? $" · {gb:F1} ГБ" : $" · {d.TotalSize / (1024 * 1024)} МБ";
+                            }
+                        }
+                        catch {}
+                        if (string.IsNullOrEmpty(label)) label = "Новый накопитель";
+                        string driveLetter = d.Name.TrimEnd('\\');
+                        Notify(Glyph.Folder, _orange, label, $"{driveLetter}{sizeStr} подключен", 4);
+                    }
+                }
+            }
+            catch {}
+        });
+    }
+
+    void OnDeviceRemoval()
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            if (!Settings.NotifyDrive) return;
+            try
+            {
+                var currentDrives = new HashSet<string>(System.IO.DriveInfo.GetDrives().Select(d => d.Name), StringComparer.OrdinalIgnoreCase);
+                var removed = _knownDrives.Where(d => !currentDrives.Contains(d)).ToList();
+                foreach (var name in removed)
+                {
+                    _knownDrives.Remove(name);
+                    Notify(Glyph.Folder, BrushResource("Dim"), "Накопитель извлечен", name.TrimEnd('\\'), 3);
+                }
+            }
+            catch {}
+        });
+    }
+
+    double BubbleExtraWidth()
+    {
+        double record = _obs.Recording && _view != View.Record ? _recordBubbleWidth.Target : 0;
+        double timer = _countdown.IsActive && _view != View.Timer ? _timerBubbleWidth.Target : 0;
+        double shelf = _shelf.Items.Count > 0 ? _shelfBubbleWidth.Target : 0;
+        double seams = (record > 0 && timer > 0 ? 1 : 0) + (timer > 0 && shelf > 0 ? 1 : 0);
+        double extra = record + timer + shelf - (seams * BubbleOverlap);
+        return extra > 0 ? extra : 0;
+    }
+
     IntPtr OnShellMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
+        if (msg == WM_DEVICECHANGE)
+        {
+            int wp = wParam.ToInt32();
+            if (wp == DBT_DEVICEARRIVAL) OnDeviceArrival();
+            else if (wp == DBT_DEVICEREMOVECOMPLETE) OnDeviceRemoval();
+        }
+
         switch (Native.MediaKeyOf(msg, wParam, lParam))
         {
             case Native.MediaKey.VolumeUp when IsVolumeAtLimit(true):
@@ -453,6 +539,7 @@ public partial class MainWindow : Window
             Panel.Menu => View.Menu,
             Panel.Settings => View.Settings,
             Panel.Look => View.Look,
+            Panel.Notifications => View.Notifications,
             Panel.Update => View.Update,
             Panel.Lyrics => View.Lyrics,
             Panel.Shelf => View.Shelf,
@@ -541,13 +628,15 @@ public partial class MainWindow : Window
     PillShape ShapeOf(View view) => view switch
     {
         View.Idle => PillShapes[view] with { Width = HasIdleWeather ? 172 : 118 },
-        View.Media => PillShapes[view] with { Width = _compactMediaWidth },
+        View.Media => PillShapes[view] with { Width = _compactMediaWidth + BubbleExtraWidth() },
+        View.Timer => PillShapes[view] with { Width = _countdown.Remaining.TotalHours >= 1 ? 148 : 132 },
         View.MediaBig when _playerHasLyricRoom => PillShapes[view] with { Height = PlayerHeight + PlayerLyricsHeight },
         View.RecordSet => PillShapes[view] with { Width = RecordSetView.Width },
         View.Update => PillShapes[view] with { Height = UpdatePage.Height },
         View.Weather => PillShapes[view] with { Height = WeatherView.Height },
         View.Place => PillShapes[view] with { Height = PlaceView.Height },
         View.Look => PillShapes[view] with { Height = LookView.Height },
+        View.Notifications => PillShapes[view] with { Height = NotificationsPage.Height },
         _ => PillShapes[view],
     };
 

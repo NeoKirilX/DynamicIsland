@@ -119,8 +119,7 @@ public partial class MainWindow
         int dir = DragDirection(leant, pace, LeanToSkip);
         if (dir == 0 || !IsMediaActive) return;
 
-        bool next = dir > 0;
-        if (Settings.InvertMediaGesture) next = !next;
+        bool next = Settings.InvertMediaGesture ? (dir > 0) : (dir < 0);
 
         RememberSkip(next ? 1 : -1);
         if (next) _media.Next();

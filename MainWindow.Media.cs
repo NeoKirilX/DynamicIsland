@@ -287,7 +287,8 @@ public partial class MainWindow
 
     void PlaceCoverAndBars(Rect pill)
     {
-        double baseW = _view == View.Media ? _compactMediaWidth : pill.Width;
+        double bubbleExtra = _view == View.Media ? BubbleExtraWidth() : 0;
+        double baseW = _view == View.Media ? (_compactMediaWidth + bubbleExtra) : pill.Width;
         double baseLeft = (HostWidth - baseW) / 2;
         double baseRight = (HostWidth + baseW) / 2;
 
@@ -310,7 +311,7 @@ public partial class MainWindow
         Eq.Width = eqW;
         Eq.Height = eqH;
         Eq.Open = _barsOpen.Value;
-        EqMove.X = baseRight - _barsRight.Value - eqW;
+        EqMove.X = baseRight - bubbleExtra - _barsRight.Value - eqW;
         EqMove.Y = _barsCenterY.Value - eqH / 2;
     }
 

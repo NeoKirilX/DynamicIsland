@@ -108,6 +108,12 @@ public partial class MainWindow
         UpdateSwitches(true);
     }
 
+    void NotifyDrive_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NotifyDrive = !Settings.NotifyDrive;
+        UpdateSwitches(true);
+    }
+
     void NotifyTimer_Click(object sender, RoutedEventArgs e)
     {
         Settings.NotifyTimer = !Settings.NotifyTimer;
@@ -335,6 +341,7 @@ public partial class MainWindow
         NotifyHeadphonesSwitch.Set(Settings.NotifyHeadphones, animate);
         NotifyBatterySwitch.Set(Settings.NotifyBattery, animate);
         NotifyVpnSwitch.Set(Settings.NotifyVpn, animate);
+        NotifyDriveSwitch.Set(Settings.NotifyDrive, animate);
         NotifyTimerSwitch.Set(Settings.NotifyTimer, animate);
         NotifyObsSwitch.Set(Settings.NotifyObs, animate);
         NotifyShelfSwitch.Set(Settings.NotifyShelf, animate);
@@ -621,6 +628,8 @@ public partial class MainWindow
     {
         Settings.Radius = (int)RadiusSlider.Value;
         RadiusText.Text = Settings.Radius + " px";
+        ApplyShape();
+        StartShapeLoop();
         UpdateTargets();
     }
 

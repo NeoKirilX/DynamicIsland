@@ -235,8 +235,9 @@ public partial class MainWindow
     void ApplyShape()
     {
         double w = Math.Max(_width.Value, MinPillSize), h = Math.Max(_height.Value, MinPillSize);
-        double r = Math.Clamp(_radius.Value, 0, Math.Min(w, h) / 2);
-        double baseW = _view == View.Media ? _compactMediaWidth : ShapeOf(_view).Width;
+        double maxR = Math.Min(w, h) / 2.0;
+        double effectiveRadius = Math.Clamp(Settings.Radius, 0, maxR);
+        double baseW = _view == View.Media ? (_compactMediaWidth + BubbleExtraWidth()) : ShapeOf(_view).Width;
         double pillLeft = (HostWidth - w) / 2;
         if (_grab == Grab.Lean && IsMediaActive)
         {
@@ -256,10 +257,9 @@ public partial class MainWindow
             _ => 0
         };
 
-        double radius = Settings.Radius < 100 ? (r * Settings.Radius / 100.0) : r;
         Pill.Width = w;
         Pill.Height = h;
-        Pill.CornerRadius = Settings.Notch ? new CornerRadius(0, 0, radius, radius) : new CornerRadius(radius);
+        Pill.CornerRadius = Settings.Notch ? new CornerRadius(0, 0, effectiveRadius, effectiveRadius) : new CornerRadius(effectiveRadius);
         Canvas.SetLeft(BackdropBox, pill.Left);
         BackdropBox.Width = w;
         BackdropBox.Height = h;
@@ -282,18 +282,19 @@ public partial class MainWindow
         SharpenLyricCache(dpi);
 
         PlaceCoverAndBars(pill);
-        PlaceBubble(pill, r, scale);
+        PlaceBubble(pill, effectiveRadius, scale);
         PlaceGestureHints(pill);
 
         Geometry? outer = Body.OuterGeometry;
-        if (pill != _clipRect || r != _clipRadius || Settings.Notch != _lastNotch || !ReferenceEquals(Shadow.Data, outer))
+        if (pill != _clipRect || effectiveRadius != _clipRadius || Settings.Notch != _lastNotch || !ReferenceEquals(Shadow.Data, outer))
         {
             _clipRect = pill;
-            _clipRadius = r;
+            _clipRadius = effectiveRadius;
             _lastNotch = Settings.Notch;
-            Geometry pillOutline = Settings.Notch ? Squircle.Notch(pill, r) : Squircle.Of(pill, r);
+            Geometry pillOutline = Settings.Notch ? Squircle.Notch(pill, effectiveRadius) : Squircle.Of(pill, effectiveRadius);
             (Rect inside, double insideRadius) = Body.PillInside;
-            Geometry insideClip = inside.IsEmpty ? pillOutline : (Settings.Notch ? Squircle.Notch(inside, insideRadius) : Squircle.Of(inside, insideRadius));
+            double effectiveInsideRadius = Math.Clamp(effectiveRadius - 1.5, 0, insideRadius);
+            Geometry insideClip = inside.IsEmpty ? pillOutline : (Settings.Notch ? Squircle.Notch(inside, effectiveInsideRadius) : Squircle.Of(inside, effectiveInsideRadius));
             Host.Clip = Shared.Clip = pillOutline;
             Backdrops.Clip = GestureHints.Clip = insideClip;
             Shadow.Data = outer ?? pillOutline;
@@ -317,7 +318,7 @@ public partial class MainWindow
         LeanRightScale.ScaleX = LeanRightScale.ScaleY = hintScale;
         LeanRightMove.X = pill.Right - LeanRightHint.Width - 6;
         LeanRightMove.Y = (pill.Height - LeanRightHint.Height) / 2;
-        LeanRightIcon.Kind = Glyph.Chevron;
+        LeanRightIcon.Kind = invert ? Glyph.Chevron : Glyph.Back;
         LeanRightIcon.Fill = leanReady && _leanDrag > 0 ? _accentBrush : Brushes.White;
 
         // Hint for drag LEFT: placed in the expanded space on the left side
@@ -326,7 +327,7 @@ public partial class MainWindow
         LeanLeftScale.ScaleX = LeanLeftScale.ScaleY = hintScale;
         LeanLeftMove.X = pill.Left + 6;
         LeanLeftMove.Y = (pill.Height - LeanLeftHint.Height) / 2;
-        LeanLeftIcon.Kind = Glyph.Back;
+        LeanLeftIcon.Kind = invert ? Glyph.Back : Glyph.Chevron;
         LeanLeftIcon.Fill = leanReady && _leanDrag < 0 ? _accentBrush : Brushes.White;
 
         double handleAlpha = Math.Clamp(_pullHandleAlpha.Value, 0, 1);
@@ -428,8 +429,9 @@ public partial class MainWindow
         double recordWidth = _recordBubbleWidth.Value;
         double timerWidth = _timerBubbleWidth.Value;
         double wide = Math.Max(recordWidth * record + timerWidth * timer + _shelfBubbleWidth.Value * shelf - BubbleOverlap * seams, Bubble.Height);
-        bool apart = split > BubbleVisibleSplit;
-        Bubble.SetVisible(apart);
+        bool hasBubble = (_obs.Recording && _view != View.Record) || (_countdown.IsActive && _view != View.Timer) || (_shelf.Items.Count > 0);
+        bool showBubble = hasBubble && split > BubbleVisibleSplit;
+        Bubble.SetVisible(showBubble);
         Bubble.Width = wide;
         BubbleRecord.Width = Math.Max(recordWidth - 2, 0);
         BubbleTimer.Width = Math.Max(timerWidth - 2, 0);
@@ -438,26 +440,24 @@ public partial class MainWindow
         BubbleTimer.Margin = new Thickness((recordWidth - BubbleOverlap) * record, 0, 0, 0);
         BubbleShelf.Opacity = Math.Clamp(shelf * 2 - 1, 0, 1);
         BubbleShelf.Margin = new Thickness(0, 0, ShelfBubblePadding + (ShelfBubblePaddingWithTimer - ShelfBubblePadding) * Math.Clamp(Math.Max(timer, record), 0, 1), 0);
-        double tuck = Math.Max(r - Bubble.Height / 2, 0) * BubbleTuckFactor * (1 - Math.Clamp(split, 0, 1)) * scale;
 
         bool splitLeft = Settings.IslandAlign == IslandAlign.Right;
         if (splitLeft)
         {
-            BubbleMove.X = -(pill.Width * scale - wide) / 2 - (BubbleGap + wide) * split + tuck;
-            double past = ((BubbleGap + wide) * split - wide - tuck) / scale;
-            Body.SetShape(pill, r, apart
-                ? new Rect(pill.Left - past - wide * bubble / scale, 0, wide * bubble / scale, Bubble.Height * bubble / scale)
-                : Rect.Empty);
+            BubbleMove.X = pill.Left + 4;
         }
         else
         {
-            BubbleMove.X = (pill.Width * scale - wide) / 2 + (BubbleGap + wide) * split - tuck;
-            double past = ((BubbleGap + wide) * split - wide - tuck) / scale;
-            Body.SetShape(pill, r, apart
-                ? new Rect(pill.Right + past, 0, wide * bubble / scale, Bubble.Height * bubble / scale)
-                : Rect.Empty);
+            double baseW = _view == View.Media ? (_compactMediaWidth + BubbleExtraWidth()) : pill.Width;
+            double restingRight = (HostWidth + baseW) / 2;
+            BubbleMove.X = restingRight - wide - 4;
         }
-        BubbleScale.ScaleX = BubbleScale.ScaleY = bubble;
+        BubbleMove.Y = (pill.Height - Bubble.Height) / 2;
+
+        // One solid island - never split into separate bubble rects
+        Body.SetShape(pill, r, Rect.Empty);
+
+        BubbleScale.ScaleX = BubbleScale.ScaleY = 1.0;
         BubbleBody.Opacity = Math.Clamp(split * 4 - 3, 0, 1);
         Bubble.IsHitTestVisible = split > BubbleClickableSplit;
     }

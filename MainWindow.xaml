@@ -539,7 +539,7 @@
                     </Canvas>
                 </Grid>
 
-                <Grid x:Name="TimerView" Width="132" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="TimerView" Width="148" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:Ring x:Name="TimerRing" Width="18" Height="18"
                                 HorizontalAlignment="Left" VerticalAlignment="Center" Margin="9,0,0,0"/>
                     <local:Digits x:Name="TimerText" Text="25:00" FontSize="13.5" FontWeight="SemiBold"
@@ -823,8 +823,8 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="TimerBigView" Width="330" Height="92" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <local:Puddle Height="64" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0">
+                <Grid x:Name="TimerBigView" Width="340" Height="96" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <local:Puddle Height="64" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="24,0,0,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Style="{StaticResource IconButton}" Width="52" Height="52" Click="TimerToggle_Click">
                             <Grid Width="46" Height="46">
@@ -905,8 +905,8 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="RecordBigView" Width="340" Height="92" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <local:Puddle Height="64" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0">
+                <Grid x:Name="RecordBigView" Width="350" Height="96" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <local:Puddle Height="64" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="24,0,0,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Style="{StaticResource IconButton}" Width="52" Height="52" local:Puddle.Tint="#FF453A" Click="RecordStop_Click">
                             <Grid Width="46" Height="46">
@@ -1130,13 +1130,6 @@
                                         <local:Toggle x:Name="AppVolumeSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>
                                 </Button>
-                                <Button Style="{StaticResource RowButton}" Click="Network_Click">
-                                    <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Wifi"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Уведомления о сети"/>
-                                        <local:Toggle x:Name="NetworkSwitch" Style="{StaticResource RowSwitch}"/>
-                                    </Grid>
-                                </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Weather_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="CloudSun"/>
@@ -1244,7 +1237,7 @@
                     </local:RowList>
                 </Grid>
 
-                <Grid x:Name="NotificationsPage" Width="352" Height="380" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="NotificationsPage" Width="352" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:RowList Margin="10,8,10,0">
                         <Button Style="{StaticResource BackButton}" Content="УВЕДОМЛЕНИЯ" Click="NotificationsBack_Click"/>
                         <Button Style="{StaticResource RowButton}" Click="InterceptNotifs_Click">
@@ -1281,6 +1274,20 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Vpn"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="VPN"/>
                                 <local:Toggle x:Name="NotifyVpnSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="Network_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Wifi"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Сеть и Wi-Fi"/>
+                                <local:Toggle x:Name="NetworkSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="NotifyDrive_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Folder"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Накопители (USB, флешки)"/>
+                                <local:Toggle x:Name="NotifyDriveSwitch" Style="{StaticResource RowSwitch}"/>
                             </Grid>
                         </Button>
                         <Button Style="{StaticResource RowButton}" Click="NotifyTimer_Click">
@@ -2019,7 +2026,7 @@
                     <local:Ring x:Name="BubbleRing" Width="16" Height="16"
                                 HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0,0,0"/>
                     <local:Digits x:Name="BubbleText" Text="25:00" FontSize="12.5" FontWeight="SemiBold"
-                                  HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                  HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"/>
                 </Grid>
                 <StackPanel x:Name="BubbleShelf" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
                             Margin="0,0,13,0">

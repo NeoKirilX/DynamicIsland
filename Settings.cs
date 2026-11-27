@@ -203,6 +203,7 @@ static class Settings
     static bool _notifyTimer = ReadSwitch(nameof(NotifyTimer), true);
     static bool _notifyObs = ReadSwitch(nameof(NotifyObs), true);
     static bool _notifyShelf = ReadSwitch(nameof(NotifyShelf), true);
+    static bool _notifyDrive = ReadSwitch(nameof(NotifyDrive), true);
     static int _timerSound = Math.Clamp(Read(nameof(TimerSound), 0), 0, 5);
     static bool _timerIntervalMode = ReadSwitch(nameof(TimerIntervalMode), false);
     static bool _timerOvertime = ReadSwitch(nameof(TimerOvertime), true);
@@ -673,6 +674,12 @@ static class Settings
     {
         get => _notifyShelf;
         set => Write(nameof(NotifyShelf), _notifyShelf = value);
+    }
+
+    public static bool NotifyDrive
+    {
+        get => _notifyDrive;
+        set => Write(nameof(NotifyDrive), _notifyDrive = value);
     }
 
     public static int TimerSound

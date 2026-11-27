@@ -97,7 +97,7 @@ public partial class MainWindow
         }
 
         double share = _countdown.RemainingShare;
-        _timerBubbleWidth.Target = left.TotalHours >= 1 ? 98 : TimerBubbleWidth;
+        _timerBubbleWidth.Target = left.TotalHours >= 1 ? 104 : TimerBubbleWidth;
         TimerRing.Progress = BubbleRing.Progress = share;
         BigRing.BeginAnimation(Ring.ProgressProperty, new DoubleAnimation(share, TimerBigView.IsVisible ? TickInterval : TimeSpan.Zero));
         int seconds = (int)Math.Ceiling(left.TotalSeconds);
