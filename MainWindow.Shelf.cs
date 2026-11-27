@@ -182,16 +182,10 @@ public partial class MainWindow
 
         try
         {
-            if (tile.Item.Path.EndsWith(".dni", StringComparison.OrdinalIgnoreCase))
+            if (ConfigService.IsConfigFile(tile.Item.Path))
             {
-                var (ok, msg) = ConfigService.ImportConfig(tile.Item.Path);
-                if (Settings.NotifyShelf) Notify(ok ? Glyph.Check : Glyph.Cross, Brushes.White, ok ? "Конфиг импортирован" : "Ошибка конфига", msg);
-                if (ok)
-                {
-                    UpdateSwitches(false);
-                    RefreshLookPage();
-                    SyncAccent(false);
-                }
+                ApplyConfigHot(tile.Item.Path);
+                return;
             }
             else
             {
@@ -256,6 +250,24 @@ public partial class MainWindow
         if (_dragOver) _dragLeaveTimeout.Start(DragLeaveDelay);
     }
 
+    void ApplyConfigHot(string path)
+    {
+        var (ok, msg) = ConfigService.ImportConfig(path);
+        Notify(ok ? Glyph.Check : Glyph.Cross, Brushes.White, ok ? "Конфиг применен" : "Ошибка конфига", ok ? System.IO.Path.GetFileName(path) : msg);
+        if (ok)
+        {
+            UpdateSwitches(true);
+            RefreshLookPage();
+            ApplyLook();
+            SyncGlass(true);
+            SyncAccent(true);
+            SyncRim();
+        }
+        SelectPanel(Panel.None);
+        UpdateView();
+        UpdateTargets();
+    }
+
     void Root_Drop(object sender, DragEventArgs e)
     {
         e.Handled = true;
@@ -263,7 +275,15 @@ public partial class MainWindow
         _dragLeaveTimeout.Cancel();
         e.Effects = DropEffect(e);
         EndDragOver();
-        if (e.Data.GetData(DataFormats.FileDrop) is string[] paths) _shelf.Add(paths);
+        if (e.Data.GetData(DataFormats.FileDrop) is string[] paths && paths.Length > 0)
+        {
+            if (paths.Length == 1 && ConfigService.IsConfigFile(paths[0]))
+            {
+                ApplyConfigHot(paths[0]);
+                return;
+            }
+            _shelf.Add(paths);
+        }
         _collapseTimeout.Start(LongCollapseDelay);
     }
 

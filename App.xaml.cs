@@ -37,6 +37,10 @@ public partial class App : Application
             Log(args.Exception);
             args.Handled = true;
         };
+        if (e.Args.Length > 0 && ConfigService.IsConfigFile(e.Args[0]))
+        {
+            ConfigService.ImportConfig(e.Args[0]);
+        }
         new MainWindow().Show();
     }
 

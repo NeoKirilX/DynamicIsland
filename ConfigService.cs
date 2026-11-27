@@ -77,6 +77,11 @@ static class ConfigService
                 ["matrix_opacity"] = Settings.MatrixOpacity,
                 ["player_bg"] = Settings.Backdrop.ToString().ToLowerInvariant(),
                 ["language"] = Settings.Language,
+                ["notch"] = Settings.Notch,
+                ["pos_x"] = Settings.PosX,
+                ["pos_y"] = Settings.PosY,
+                ["island_align"] = Settings.IslandAlign.ToString().ToLowerInvariant(),
+                ["invert_gesture"] = Settings.InvertMediaGesture,
             };
 
             var data = new Dictionary<string, object>
@@ -168,11 +173,23 @@ static class ConfigService
             using JsonDocument doc = JsonDocument.Parse(json);
             JsonElement root = doc.RootElement;
 
-            if (!root.TryGetProperty("magic", out JsonElement magic) || magic.GetString() != DniMagic)
-                return (false, "Неверный формат .dni файла");
-
-            if (!root.TryGetProperty("settings", out JsonElement settings))
-                return (false, "В файле отсутствуют настройки");
+            JsonElement settings;
+            if (root.TryGetProperty("magic", out JsonElement magic) && magic.GetString() == DniMagic && root.TryGetProperty("settings", out JsonElement s1))
+            {
+                settings = s1;
+            }
+            else if (root.TryGetProperty("settings", out JsonElement s2))
+            {
+                settings = s2;
+            }
+            else if (root.ValueKind == JsonValueKind.Object)
+            {
+                settings = root;
+            }
+            else
+            {
+                return (false, "Неверный формат файла конфигурации");
+            }
 
             double screenW = SystemParameters.PrimaryScreenWidth;
             double screenH = SystemParameters.PrimaryScreenHeight;
@@ -354,6 +371,22 @@ static class ConfigService
                     case "language":
                         Settings.Language = val.GetString() ?? "ru";
                         break;
+                    case "notch":
+                        Settings.Notch = val.GetBoolean();
+                        break;
+                    case "pos_x":
+                        Settings.PosX = val.GetInt32();
+                        break;
+                    case "pos_y":
+                        Settings.PosY = val.GetInt32();
+                        break;
+                    case "island_align":
+                        if (Enum.TryParse(val.GetString(), true, out IslandAlign ia)) Settings.IslandAlign = ia;
+                        break;
+                    case "invert_gesture":
+                    case "invert_media_gesture":
+                        Settings.InvertMediaGesture = val.GetBoolean();
+                        break;
                 }
             }
 
@@ -365,4 +398,28 @@ static class ConfigService
             return (false, ex.Message);
         }
     }
+
+    public static bool IsConfigFile(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath)) return false;
+        if (filePath.EndsWith(".dni", StringComparison.OrdinalIgnoreCase)) return true;
+        if (filePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                using var stream = File.OpenRead(filePath);
+                using var doc = JsonDocument.Parse(stream);
+                var root = doc.RootElement;
+                if (root.ValueKind == JsonValueKind.Object)
+                {
+                    if (root.TryGetProperty("magic", out var m) && m.GetString() == DniMagic) return true;
+                    if (root.TryGetProperty("settings", out _)) return true;
+                    if (root.TryGetProperty("scale", out _) || root.TryGetProperty("gap", out _) || root.TryGetProperty("notch", out _)) return true;
+                }
+            }
+            catch { }
+        }
+        return false;
+    }
+
 }
