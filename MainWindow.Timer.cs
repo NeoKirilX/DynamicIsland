@@ -180,7 +180,7 @@ public partial class MainWindow
         {
             int h = _setupMinutes / 60;
             int m = _setupMinutes % 60;
-            SetupText.Text = $"{h}:{m:02d}:00";
+            SetupText.Text = $"{h}:{m:00}:00";
             SetupText.FontSize = 32;
             SetupDurationText.Text = m > 0 ? $"{h} ч {m} мин" : $"{h} ч";
             SetupDurationText.Visibility = Visibility.Visible;
