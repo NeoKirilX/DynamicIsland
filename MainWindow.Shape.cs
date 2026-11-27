@@ -56,12 +56,31 @@ public partial class MainWindow
         if (_view == View.Idle) IdleView.Width = HasIdleWeather ? 172 : 118;
         bool compact = shape.Height < CompactMaxHeight;
         double pull = RubberBand(_pull, MaxPull);
-        double leanExtra = _grab == Grab.Lean && IsMediaActive ? Math.Clamp(Math.Abs(_leanDrag) * 0.85, 0, 48) : 0;
         bool dragging = _grab is Grab.Pull or Grab.Lean;
-        _width.Target = shape.Width + pull * PullWidening + leanExtra;
+        _width.Target = shape.Width + pull * PullWidening;
         _height.Target = shape.Height + pull;
         _radius.Target = shape.Radius + pull * PullRounding;
-        _leanX.Target = 0;
+
+        double lean = 0;
+        if (_grab == Grab.Lean && IsMediaActive)
+        {
+            double rawLean = _leanDrag;
+            if (Settings.IslandAlign == IslandAlign.Right)
+            {
+                // Can't move right past the right resting anchor
+                if (rawLean > 0) rawLean = 0;
+            }
+            else if (Settings.IslandAlign == IslandAlign.Left)
+            {
+                // Can't move left past the left resting anchor
+                if (rawLean < 0) rawLean = 0;
+            }
+
+            double absLean = Math.Abs(rawLean);
+            double leanRubber = (absLean * 44.0) / (absLean + 44.0);
+            lean = Math.Sign(rawLean) * leanRubber;
+        }
+        _leanX.Target = lean;
         if (MediaSpots.TryGetValue(_view, out MediaSpot spot))
         {
             _coverTop.Target = spot.CoverTop + pull / 2;
@@ -237,15 +256,7 @@ public partial class MainWindow
         double w = Math.Max(_width.Value, MinPillSize), h = Math.Max(_height.Value, MinPillSize);
         double maxR = Math.Min(w, h) / 2.0;
         double effectiveRadius = Math.Clamp(Settings.Radius, 0, maxR);
-        double baseW = _view == View.Media ? (_compactMediaWidth + BubbleExtraWidth()) : ShapeOf(_view).Width;
         double pillLeft = (HostWidth - w) / 2;
-        if (_grab == Grab.Lean && IsMediaActive)
-        {
-            if (_leanDrag > 0)
-                pillLeft = (HostWidth - baseW) / 2;
-            else if (_leanDrag < 0)
-                pillLeft = (HostWidth + baseW) / 2 - w;
-        }
         var pill = new Rect(pillLeft, 0, w, h);
         double scale = Math.Max(_scale.Value, MinScale), size = Math.Max(_userScale.Value, MinScale);
         double dpi = VisualTreeHelper.GetDpi(this).DpiScaleY;

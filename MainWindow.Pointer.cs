@@ -124,7 +124,10 @@ public partial class MainWindow
         RememberSkip(next ? 1 : -1);
         if (next) _media.Next();
         else _media.Previous();
-        _leanX.Velocity = Math.Clamp(pace, -MaxThrowSpeed, MaxThrowSpeed);
+        double throwPace = pace;
+        if (Settings.IslandAlign == IslandAlign.Right && throwPace > 0) throwPace = 0;
+        else if (Settings.IslandAlign == IslandAlign.Left && throwPace < 0) throwPace = 0;
+        _leanX.Velocity = Math.Clamp(throwPace, -MaxThrowSpeed, MaxThrowSpeed);
     }
 
     void ToggleOpen()
