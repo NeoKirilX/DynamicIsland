@@ -401,10 +401,7 @@ public partial class MainWindow
 
     void ApplyMotionBlur()
     {
-        double speed = Math.Sqrt(_width.Velocity * _width.Velocity + _height.Velocity * _height.Velocity);
-        double smear = _morphing && _grab == Grab.None ? Math.Min(speed / MotionBlurSpeed, MaxMotionBlur) : 0;
-        _motionBlur.Radius = smear;
-        Host.Effect = smear > MinMotionBlur ? _motionBlur : null;
+        if (Host.Effect != null) Host.Effect = null;
     }
 
     void PlaceBubble(Rect pill, double r, double scale)

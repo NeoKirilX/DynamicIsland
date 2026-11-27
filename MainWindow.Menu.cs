@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -644,9 +645,20 @@ public partial class MainWindow
 
     void ShowCoordConfirm()
     {
-        CoordConfirmBox.Visibility = Visibility.Visible;
+        CoordConfirmOverlay.Visibility = Visibility.Visible;
+        CoordConfirmOverlay.IsHitTestVisible = true;
         _coordConfirmSeconds = 8;
-        CoordConfirmTimerText.Text = $"Откат через {_coordConfirmSeconds} с";
+        CoordConfirmTimerText.Text = $"Смещение было сильно изменено.\nОткат через {_coordConfirmSeconds} с";
+
+        CoordConfirmDimmer.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, Ms(240))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        });
+
+        var spring = new BackEase { Amplitude = 0.28, EasingMode = EasingMode.EaseOut };
+        CoordConfirmScale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.82, 1.0, Ms(320)) { EasingFunction = spring });
+        CoordConfirmScale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.82, 1.0, Ms(320)) { EasingFunction = spring });
+        CoordConfirmCard.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1.0, Ms(200)));
 
         if (_coordConfirmTimer == null)
         {
@@ -660,7 +672,7 @@ public partial class MainWindow
                 }
                 else
                 {
-                    CoordConfirmTimerText.Text = $"Откат через {_coordConfirmSeconds} с";
+                    CoordConfirmTimerText.Text = $"Смещение было сильно изменено.\nОткат через {_coordConfirmSeconds} с";
                 }
             };
         }
@@ -671,7 +683,19 @@ public partial class MainWindow
     void HideCoordConfirm()
     {
         _coordConfirmTimer?.Stop();
-        CoordConfirmBox.Visibility = Visibility.Collapsed;
+        CoordConfirmOverlay.IsHitTestVisible = false;
+
+        var fade = new DoubleAnimation(0, Ms(180)) { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } };
+        fade.Completed += (_, _) => CoordConfirmOverlay.Visibility = Visibility.Collapsed;
+        CoordConfirmDimmer.BeginAnimation(OpacityProperty, fade);
+        CoordConfirmCard.BeginAnimation(OpacityProperty, fade);
+        CoordConfirmScale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1.0, 0.90, Ms(180)));
+        CoordConfirmScale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1.0, 0.90, Ms(180)));
+    }
+
+    void CoordConfirm_BackgroundClick(object sender, MouseButtonEventArgs e)
+    {
+        CoordConfirm_Cancel(sender, e);
     }
 
     void CoordConfirm_Accept(object sender, RoutedEventArgs e)

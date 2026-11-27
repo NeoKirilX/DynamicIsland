@@ -566,10 +566,10 @@ public partial class MainWindow : Window
             int step = ctrl ? 50 : shift ? 1 : 10;
             switch (e.Key)
             {
-                case Key.Left: Settings.PosX -= step; ApplyLook(); e.Handled = true; break;
-                case Key.Right: Settings.PosX += step; ApplyLook(); e.Handled = true; break;
-                case Key.Up: Settings.PosY -= step; ApplyLook(); e.Handled = true; break;
-                case Key.Down: Settings.PosY += step; ApplyLook(); e.Handled = true; break;
+                case Key.Left: Settings.PosX -= step; ApplyLook(); CheckCoordinateSafety(); e.Handled = true; break;
+                case Key.Right: Settings.PosX += step; ApplyLook(); CheckCoordinateSafety(); e.Handled = true; break;
+                case Key.Up: Settings.PosY -= step; ApplyLook(); CheckCoordinateSafety(); e.Handled = true; break;
+                case Key.Down: Settings.PosY += step; ApplyLook(); CheckCoordinateSafety(); e.Handled = true; break;
             }
         }
     }

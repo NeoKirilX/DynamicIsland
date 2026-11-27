@@ -9,11 +9,11 @@ namespace DynamicIsland;
 public partial class MainWindow
 {
     const double PageSlideDistance = 56;
-    const double ViewBlur = 12;
-    const double FadeOutScale = 0.9, FadeInScale = 0.86;
-    static readonly TimeSpan RowStagger = TimeSpan.FromMilliseconds(28);
-    static readonly TimeSpan FadeInDelay = TimeSpan.FromMilliseconds(70);
-    static readonly Duration BackdropFadeIn = Ms(280), BackdropFadeOut = Ms(160);
+    const double ViewBlur = 0;
+    const double FadeOutScale = 0.94, FadeInScale = 0.94;
+    static readonly TimeSpan RowStagger = TimeSpan.FromMilliseconds(24);
+    static readonly TimeSpan FadeInDelay = TimeSpan.Zero;
+    static readonly Duration BackdropFadeIn = Ms(240), BackdropFadeOut = Ms(160);
 
     static TransformGroup CreateViewTransforms() => new() { Children = { new ScaleTransform(1, 1), new ScaleTransform(1, 1), new TranslateTransform() } };
 
@@ -119,8 +119,7 @@ public partial class MainWindow
     void FadeOut(FrameworkElement view)
     {
         view.IsHitTestVisible = false;
-        view.AnimateBlur(0, ViewBlur, Ms(170), keep: true);
-        FadeScaleOf(view).AnimateScale(new DoubleAnimation(FadeOutScale, Ms(170)) { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } });
+        FadeScaleOf(view).AnimateScale(new DoubleAnimation(FadeOutScale, Ms(160)) { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } });
         HideWhenFaded(view, Ms(140));
     }
 
@@ -132,11 +131,10 @@ public partial class MainWindow
         OffsetOf(view).BeginAnimation(TranslateTransform.XProperty, null);
 
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
-        view.AnimateBlur(ViewBlur, 0, Ms(300), ease, FadeInDelay);
-        var grow = new DoubleAnimation(1, Ms(380)) { BeginTime = FadeInDelay, EasingFunction = ease };
+        var grow = new DoubleAnimation(1, Ms(320)) { EasingFunction = ease };
         if (fresh) grow.From = FadeInScale;
         FadeScaleOf(view).AnimateScale(grow);
-        view.BeginAnimation(OpacityProperty, new DoubleAnimation(1, Ms(240)) { BeginTime = FadeInDelay });
+        view.BeginAnimation(OpacityProperty, new DoubleAnimation(1, Ms(200)));
     }
 
     void HideWhenFaded(FrameworkElement view, Duration time)

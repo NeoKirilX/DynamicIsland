@@ -1448,37 +1448,6 @@
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Сбросить смещение (0, 0)"/>
                                     </Grid>
                                 </Button>
-                                <Border x:Name="CoordConfirmBox" Visibility="Collapsed" Background="#F2181822" CornerRadius="14" Padding="12,10" Margin="6,4,6,6" BorderBrush="#33FFFFFF" BorderThickness="1">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="Применить позицию?" FontWeight="SemiBold" FontSize="12.5" Foreground="White"/>
-                                            <TextBlock x:Name="CoordConfirmTimerText" Text="Откат через 8 с" FontSize="11" Foreground="{StaticResource Dim}"/>
-                                        </StackPanel>
-                                        <Button Grid.Column="1" Click="CoordConfirm_Accept" Margin="0,0,6,0" Background="#2B8256" BorderThickness="0">
-                                            <Button.Template>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="12,4">
-                                                        <TextBlock Text="Да" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Button.Template>
-                                        </Button>
-                                        <Button Grid.Column="2" Click="CoordConfirm_Cancel" Background="#33FFFFFF" BorderThickness="0">
-                                            <Button.Template>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="12,4">
-                                                        <TextBlock Text="Нет" FontWeight="SemiBold" FontSize="12" Foreground="White"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Button.Template>
-                                        </Button>
-                                    </Grid>
-                                </Border>
                                 <Button Style="{StaticResource RowButton}" Click="Glass_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
@@ -1930,7 +1899,93 @@
                     </Border.RenderTransform>
                 </Border>
             </Canvas>
+            <!-- iOS Modal Coordinate Confirmation Alert -->
+            <Grid x:Name="CoordConfirmOverlay" Visibility="Collapsed" IsHitTestVisible="False"
+                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <!-- Dimmer background under the alert -->
+                <Border x:Name="CoordConfirmDimmer" Background="#7F000000" Opacity="0"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                        MouseLeftButtonDown="CoordConfirm_BackgroundClick"/>
+                
+                <!-- iOS Alert Card -->
+                <Border x:Name="CoordConfirmCard" Width="280" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Background="#F01C1C1E" BorderBrush="#33FFFFFF" BorderThickness="1"
+                        CornerRadius="24" Padding="20,20,20,16" RenderTransformOrigin="0.5,0.5">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="32" ShadowDepth="8" Direction="270" Opacity="0.5" Color="Black"/>
+                    </Border.Effect>
+                    <Border.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="CoordConfirmScale" ScaleX="1" ScaleY="1"/>
+                            <TranslateTransform x:Name="CoordConfirmMove"/>
+                        </TransformGroup>
+                    </Border.RenderTransform>
+                    <StackPanel>
+                        <!-- iOS Title -->
+                        <TextBlock Text="Применить позицию?" FontWeight="SemiBold" FontSize="17"
+                                   Foreground="White" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,6"/>
+                        <!-- iOS Description & Timer -->
+                        <TextBlock x:Name="CoordConfirmTimerText" Text="Смещение было сильно изменено.&#x0a;Откат изменений через 8 с"
+                                   FontSize="13" Foreground="#B0B0C0" TextWrapping="Wrap"
+                                   HorizontalAlignment="Center" TextAlignment="Center" LineHeight="17" Margin="0,0,0,18"/>
+                        <!-- iOS Action Buttons -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Cancel / Don't Allow -->
+                            <Button x:Name="CoordConfirmCancelBtn" Grid.Column="0" Height="42" Click="CoordConfirm_Cancel"
+                                    Background="#303036" BorderThickness="0" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="BtnBorder" Background="{TemplateBinding Background}" CornerRadius="14">
+                                            <TextBlock Text="Отмена" FontWeight="Medium" FontSize="15" Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="BtnBorder" Property="Background" Value="#404048"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="BtnBorder" Property="Background" Value="#25252A"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            
+                            <!-- Apply / Allow -->
+                            <Button x:Name="CoordConfirmAcceptBtn" Grid.Column="2" Height="42" Click="CoordConfirm_Accept"
+                                    Background="#007AFF" BorderThickness="0" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="BtnBorder" Background="{TemplateBinding Background}" CornerRadius="14">
+                                            <TextBlock Text="Применить" FontWeight="SemiBold" FontSize="15" Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="BtnBorder" Property="Background" Value="#0A84FF"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="BtnBorder" Property="Background" Value="#0062CC"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+
         </Grid>
+
+
 
         <Border x:Name="Bubble" Width="78" Height="34" CornerRadius="17" Visibility="Collapsed"
                 Background="Transparent" Padding="1"
