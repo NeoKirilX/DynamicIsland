@@ -441,7 +441,7 @@ public partial class MainWindow
         if (Settings.Gap != was) ApplyLook();
     }
 
-    void MaxIslandWidthSlider_Changed(object sender, RoutedEventArgs e)
+    void MaxIslandWidthSlider_Changed(object? sender, EventArgs e)
     {
         Settings.MaxIslandWidth = (int)MaxIslandWidthSlider.Value;
         MaxIslandWidthText.Text = $"{Settings.MaxIslandWidth} px";
