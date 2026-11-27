@@ -157,7 +157,7 @@ public partial class MainWindow : Window
         _spotSprings = [_coverLeft, _coverTop, _coverSize, _barsRight, _barsCenterY, _barsWidth, _barsHeight, _barsOpen];
         _springs =
         [
-            _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _bubbleSplit, _bubbleScale, _bubbleRecord, _bubbleTimer, _bubbleShelf, _shelfBubbleWidth,
+            _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _bubbleSplit, _bubbleScale, _bubbleRecord, _bubbleTimer, _bubbleShelf, _shelfBubbleWidth, _timerBubbleWidth, _recordBubbleWidth,
             _shelfScroll, _lookScroll, _settingsScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, _lyricSnapX, _lyricSnapY,
             _pullHandleAlpha, _pullHandleWidth, _pullHandleHeight, _pullHandleOffsetY, _pullHandleDriftX, .. _spotSprings,
         ];

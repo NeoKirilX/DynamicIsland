@@ -130,6 +130,7 @@ public partial class MainWindow
         int seconds = (int)_obs.Elapsed.TotalSeconds;
         if (seconds == _shownRecordSeconds) return;
         _shownRecordSeconds = seconds;
+        _recordBubbleWidth.Target = _obs.Elapsed.TotalHours >= 1 ? 98 : RecordBubbleWidth;
         RecordText.Text = BubbleRecordText.Text = RecordBigTime.Text = MenuRecord.Text = DescribeElapsed(TimeSpan.FromSeconds(seconds));
         RecordInfo.Text = DescribeRecording();
         if (!_obs.Paused) BeatRecordDots();

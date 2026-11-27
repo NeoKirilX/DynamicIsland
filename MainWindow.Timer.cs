@@ -97,6 +97,7 @@ public partial class MainWindow
         }
 
         double share = _countdown.RemainingShare;
+        _timerBubbleWidth.Target = left.TotalHours >= 1 ? 98 : TimerBubbleWidth;
         TimerRing.Progress = BubbleRing.Progress = share;
         BigRing.BeginAnimation(Ring.ProgressProperty, new DoubleAnimation(share, TimerBigView.IsVisible ? TickInterval : TimeSpan.Zero));
         int seconds = (int)Math.Ceiling(left.TotalSeconds);
@@ -252,8 +253,8 @@ public partial class MainWindow
     Panel BubblePanelAt(double x)
     {
         var parts = new List<(double Width, Panel Panel)>();
-        if (_bubbleRecord.Target > 0) parts.Add((RecordBubbleWidth, Panel.Record));
-        if (_bubbleTimer.Target > 0) parts.Add((TimerBubbleWidth, Panel.Timer));
+        if (_bubbleRecord.Target > 0) parts.Add((_recordBubbleWidth.Target, Panel.Record));
+        if (_bubbleTimer.Target > 0) parts.Add((_timerBubbleWidth.Target, Panel.Timer));
         if (_bubbleShelf.Target > 0) parts.Add((_shelfBubbleWidth.Value, Panel.Shelf));
         double end = 0;
         foreach ((double width, Panel panel) in parts.SkipLast(1))

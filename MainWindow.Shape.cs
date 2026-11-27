@@ -38,7 +38,7 @@ public partial class MainWindow
     readonly Spring _userScale = new(Settings.Scale / 100.0, 240, 26), _topGap = new(Settings.Gap, 240, 26);
     readonly Spring _bubbleSplit = new(0), _bubbleScale = new(1, 320, 20);
     readonly Spring _lyricSnapX = new(0, 200, 28), _lyricSnapY = new(0, 200, 28);
-    readonly Spring _bubbleRecord = new(0, 260, 24), _bubbleTimer = new(0, 260, 24), _bubbleShelf = new(0, 260, 24), _shelfBubbleWidth = new(ShelfBubbleWidth, 260, 24);
+    readonly Spring _bubbleRecord = new(0, 260, 24), _bubbleTimer = new(0, 260, 24), _bubbleShelf = new(0, 260, 24), _shelfBubbleWidth = new(ShelfBubbleWidth, 260, 24), _timerBubbleWidth = new(TimerBubbleWidth, 260, 24), _recordBubbleWidth = new(RecordBubbleWidth, 260, 24);
     readonly Spring _pullHandleAlpha = new(0, 680, 52), _pullHandleWidth = new(PullHandleHiddenWidth, 500, 38), _pullHandleHeight = new(PullHandleHiddenHeight, 500, 38);
     readonly Spring _pullHandleOffsetY = new(PullHandleHiddenOffsetY, 500, 38), _pullHandleDriftX = new(0, 500, 38);
     readonly BlurEffect _motionBlur = new() { Radius = 0, RenderingBias = RenderingBias.Performance };
@@ -425,13 +425,17 @@ public partial class MainWindow
         double split = _bubbleSplit.Value, bubble = Math.Max(_bubbleScale.Value, MinScale);
         double record = Math.Max(_bubbleRecord.Value, 0), timer = Math.Max(_bubbleTimer.Value, 0), shelf = Math.Max(_bubbleShelf.Value, 0);
         double seams = record * timer + timer * shelf + record * shelf * (1 - Math.Clamp(timer, 0, 1));
-        double wide = Math.Max(RecordBubbleWidth * record + TimerBubbleWidth * timer + _shelfBubbleWidth.Value * shelf - BubbleOverlap * seams, Bubble.Height);
+        double recordWidth = _recordBubbleWidth.Value;
+        double timerWidth = _timerBubbleWidth.Value;
+        double wide = Math.Max(recordWidth * record + timerWidth * timer + _shelfBubbleWidth.Value * shelf - BubbleOverlap * seams, Bubble.Height);
         bool apart = split > BubbleVisibleSplit;
         Bubble.SetVisible(apart);
         Bubble.Width = wide;
+        BubbleRecord.Width = Math.Max(recordWidth - 2, 0);
+        BubbleTimer.Width = Math.Max(timerWidth - 2, 0);
         BubbleRecord.Opacity = Math.Clamp(record * 2 - 1, 0, 1);
         BubbleTimer.Opacity = Math.Clamp(timer * 2 - 1, 0, 1);
-        BubbleTimer.Margin = new Thickness((RecordBubbleWidth - BubbleOverlap) * record, 0, 0, 0);
+        BubbleTimer.Margin = new Thickness((recordWidth - BubbleOverlap) * record, 0, 0, 0);
         BubbleShelf.Opacity = Math.Clamp(shelf * 2 - 1, 0, 1);
         BubbleShelf.Margin = new Thickness(0, 0, ShelfBubblePadding + (ShelfBubblePaddingWithTimer - ShelfBubblePadding) * Math.Clamp(Math.Max(timer, record), 0, 1), 0);
         double tuck = Math.Max(r - Bubble.Height / 2, 0) * BubbleTuckFactor * (1 - Math.Clamp(split, 0, 1)) * scale;
