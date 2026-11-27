@@ -813,6 +813,13 @@
                             <local:Digits x:Name="InfoRam" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
                                           VerticalAlignment="Center"/>
                         </StackPanel>
+                        <StackPanel x:Name="InfoSwapRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0"
+                                    Visibility="Collapsed">
+                            <local:Icon x:Name="InfoSwapIcon" Kind="Swap" Width="16" Height="16"
+                                        Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
+                            <local:Digits x:Name="InfoSwap" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
+                                          VerticalAlignment="Center"/>
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
 
@@ -1412,7 +1419,7 @@
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Location"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Выравнивание"/>
-                                        <local:Segments x:Name="AlignSegments" Style="{StaticResource RowSegments}" Labels="Слева|Центр|Справа"/>
+                                        <local:Segments x:Name="AlignSegments" Style="{StaticResource RowSegments}" Labels="Центр|Слева|Справа"/>
                                     </Grid>
                                 </Button>
                                 <Button x:Name="PosXRow" Style="{StaticResource RowButton}">

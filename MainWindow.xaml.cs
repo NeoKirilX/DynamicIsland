@@ -330,15 +330,19 @@ public partial class MainWindow : Window
     public void RepositionWindow()
     {
         double screenW = SystemParameters.PrimaryScreenWidth;
-        double baseLeft = Settings.IslandAlign switch
+        double w = _width != null ? Math.Max(_width.Value, MinPillSize) : 172;
+        double size = _userScale != null ? Math.Max(_userScale.Value, MinScale) : 1;
+        double pillW = w * size;
+
+        double targetLeft = Settings.IslandAlign switch
         {
-            IslandAlign.Left => 20,
-            IslandAlign.Right => screenW - Width - 20,
-            _ => (screenW - Width) / 2
+            IslandAlign.Left => (20 + Settings.PosX) + (pillW / 2) - (Width / 2),
+            IslandAlign.Right => (screenW - 20 + Settings.PosX) - (pillW / 2) - (Width / 2),
+            _ => (screenW - Width) / 2 + Settings.PosX
         };
-        Left = baseLeft + Settings.PosX;
+        Left = targetLeft;
         Top = Settings.Notch ? 0 : Settings.PosY;
-        _glass.Place();
+        _glass?.Place();
     }
 
     void PlayIntro()
@@ -533,6 +537,7 @@ public partial class MainWindow : Window
 
     void ShowPanel(Panel panel)
     {
+        if (panel == Panel.None) FoldLookTiles();
         _panel = panel;
         _panelOpenedAt = DateTime.UtcNow;
         UpdateView();
@@ -541,6 +546,7 @@ public partial class MainWindow : Window
     void Collapse()
     {
         if (_hovered || _pickingFiles || IsTyping) return;
+        FoldLookTiles();
         ShowPanel(Panel.None);
     }
 
@@ -555,7 +561,9 @@ public partial class MainWindow : Window
         base.OnKeyDown(e);
         if (_view == View.Look || _panel == Panel.Look)
         {
-            int step = Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? 50 : Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 10 : 1;
+            bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0 || Native.IsShiftDown;
+            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+            int step = ctrl ? 50 : shift ? 1 : 10;
             switch (e.Key)
             {
                 case Key.Left: Settings.PosX -= step; ApplyLook(); e.Handled = true; break;

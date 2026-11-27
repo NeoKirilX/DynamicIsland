@@ -533,6 +533,15 @@ public partial class MainWindow
         SlideLookTiles(HoverTiles, HoverChevron);
     }
 
+    void FoldLookTiles()
+    {
+        if (_openLookTiles == null) return;
+        _openLookTiles = null;
+        SlideLookTiles(BackdropTiles, BackdropChevron);
+        SlideLookTiles(LyricChangeTiles, LyricChangeChevron);
+        SlideLookTiles(HoverTiles, HoverChevron);
+    }
+
     void SlideLookTiles(Border tiles, Icon chevron)
     {
         bool open = tiles == _openLookTiles;
@@ -696,7 +705,7 @@ public partial class MainWindow
     void PosXSlider_Changed(object? sender, EventArgs e)
     {
         Settings.PosX = (int)PosXSlider.Value;
-        PosXText.Text = Settings.PosX + " px";
+        PosXText.Text = Settings.PosX + (Native.IsShiftDown ? " px [1px]" : " px");
         ApplyLook();
         CheckCoordinateSafety();
     }
@@ -704,7 +713,7 @@ public partial class MainWindow
     void PosYSlider_Changed(object? sender, EventArgs e)
     {
         Settings.PosY = (int)PosYSlider.Value;
-        PosYText.Text = Settings.PosY + " px";
+        PosYText.Text = Settings.PosY + (Native.IsShiftDown ? " px [1px]" : " px");
         ApplyLook();
         CheckCoordinateSafety();
     }
@@ -741,11 +750,12 @@ public partial class MainWindow
 
     void RefreshLookPage()
     {
+        bool shift = Native.IsShiftDown;
         SizeText.Text = Settings.Scale + "%";
         GapText.Text = Settings.Gap + " px";
         RadiusText.Text = Settings.Radius + " px";
-        PosXText.Text = Settings.PosX + " px";
-        PosYText.Text = Settings.PosY + " px";
+        PosXText.Text = Settings.PosX + (shift ? " px [1px]" : " px");
+        PosYText.Text = Settings.PosY + (shift ? " px [1px]" : " px");
         SizeSlider.Set(Settings.Scale, LookView.IsVisible);
         GapSlider.Set(Settings.Gap, LookView.IsVisible);
         RadiusSlider.Set(Settings.Radius, LookView.IsVisible);

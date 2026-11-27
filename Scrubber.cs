@@ -33,7 +33,13 @@ public sealed class Scrubber : FrameworkElement
     public Scrubber()
     {
         _loop = new FrameLoop(Advance);
+        Focusable = false;
         Loaded += (_, _) => AttachToRow();
+        PreviewMouseLeftButtonDown += OnDirectMouseDown;
+        PreviewMouseMove += OnDirectMouseMove;
+        PreviewMouseLeftButtonUp += OnDirectMouseUp;
+        LostMouseCapture += (_, _) => _dragging = false;
+        PreviewMouseWheel += OnDirectMouseWheel;
     }
 
     public event EventHandler? Changed;
@@ -45,6 +51,8 @@ public sealed class Scrubber : FrameworkElement
     public double Step { get; set; } = 1;
 
     public double Value { get; private set; }
+
+    double EffectiveStep() => (Native.IsShiftDown || (Keyboard.Modifiers & ModifierKeys.Shift) != 0) ? 1.0 : Step;
 
     public void Set(double value, bool animate)
     {
@@ -70,17 +78,44 @@ public sealed class Scrubber : FrameworkElement
             _row = row;
             row.PreviewMouseLeftButtonDown += OnRowDown;
             row.PreviewMouseMove += OnRowMove;
-            row.PreviewMouseLeftButtonUp += (_, _) => _dragging = false;
+            row.PreviewMouseLeftButtonUp += (_, _) => { _dragging = false; ReleaseMouseCapture(); };
             row.LostMouseCapture += (_, _) => _dragging = false;
             return;
         }
     }
 
+    void OnDirectMouseDown(object sender, MouseButtonEventArgs e) => OnRowDown(sender, e);
+    void OnDirectMouseMove(object sender, MouseEventArgs e) => OnRowMove(sender, e);
+    void OnDirectMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_dragging)
+        {
+            _dragging = false;
+            ReleaseMouseCapture();
+            e.Handled = true;
+        }
+    }
+
+    void OnDirectMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        double step = EffectiveStep();
+        double delta = e.Delta > 0 ? step : -step;
+        double newValue = Math.Clamp(Value + delta, Minimum, Maximum);
+        if (newValue != Value)
+        {
+            Set(newValue, true);
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+        e.Handled = true;
+    }
+
     void OnRowDown(object sender, MouseButtonEventArgs e)
     {
-        double x = e.GetPosition(this).X, travel = Travel();
-        if (x < -ReachBeyondEnds || x > ActualWidth + ReachBeyondEnds) return;
+        Point p = e.GetPosition(this);
+        double x = p.X, y = p.Y, travel = Travel();
+        if (x < -ReachBeyondEnds || x > ActualWidth + ReachBeyondEnds || y < -10 || y > ActualHeight + 10) return;
 
+        CaptureMouse();
         bool onKnob = Math.Abs(x - KnobCenter(_share.Target)) <= KnobGrab;
         _dragging = true;
         _grabbedShare = onKnob ? _share.Target : Math.Clamp((x - KnobWidth / 2) / travel, 0, 1);
@@ -91,17 +126,20 @@ public sealed class Scrubber : FrameworkElement
         _press.Target = 1;
         MoveTo(_grabbedShare);
         _loop.Start();
+        e.Handled = true;
     }
 
     void OnRowMove(object sender, MouseEventArgs e)
     {
         if (!_dragging || e.LeftButton != MouseButtonState.Pressed) return;
         MoveTo(_grabbedShare + (OnScreen(e.GetPosition(this).X) - _grabbedAt) / _travelOnScreen);
+        e.Handled = true;
     }
 
     void MoveTo(double share)
     {
-        double value = Minimum + Math.Round(Math.Clamp(share, 0, 1) * (Maximum - Minimum) / Step) * Step;
+        double step = EffectiveStep();
+        double value = Minimum + Math.Round(Math.Clamp(share, 0, 1) * (Maximum - Minimum) / step) * step;
         if (value == Value) return;
 
         Set(value, true);

@@ -288,7 +288,9 @@ static class Native
         return (int)Math.Clamp(Math.Round(used * 100.0 / total), 0, 100);
     }
 
-    public static bool TryGetMemory(out int percent, out double usedGb, out double totalGb)
+    public static bool IsShiftDown => (GetAsyncKeyState(0x10) & 0x8000) != 0;
+
+    public static bool TryGetMemory(out int percent, out double usedGb, out double totalGb, out double swapUsedGb, out double swapTotalGb)
     {
         var mem = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>() };
         if (GlobalMemoryStatusEx(ref mem))
@@ -296,9 +298,18 @@ static class Native
             percent = (int)mem.dwMemoryLoad;
             totalGb = Math.Round((double)mem.ullTotalPhys / (1024 * 1024 * 1024), 1);
             usedGb = Math.Round((double)(mem.ullTotalPhys - mem.ullAvailPhys) / (1024 * 1024 * 1024), 1);
+            ulong swapTotal = mem.ullTotalPageFile > mem.ullTotalPhys ? mem.ullTotalPageFile - mem.ullTotalPhys : 0;
+            ulong totalCommitted = mem.ullTotalPageFile > mem.ullAvailPageFile ? mem.ullTotalPageFile - mem.ullAvailPageFile : 0;
+            ulong ramUsed = mem.ullTotalPhys > mem.ullAvailPhys ? mem.ullTotalPhys - mem.ullAvailPhys : 0;
+            ulong swapUsed = totalCommitted > ramUsed ? totalCommitted - ramUsed : 0;
+            swapTotalGb = Math.Round((double)swapTotal / (1024 * 1024 * 1024), 1);
+            swapUsedGb = Math.Round((double)swapUsed / (1024 * 1024 * 1024), 1);
             return true;
         }
-        percent = 0; usedGb = totalGb = 0;
+        percent = 0; usedGb = totalGb = swapUsedGb = swapTotalGb = 0;
         return false;
     }
+
+    public static bool TryGetMemory(out int percent, out double usedGb, out double totalGb)
+        => TryGetMemory(out percent, out usedGb, out totalGb, out _, out _);
 }

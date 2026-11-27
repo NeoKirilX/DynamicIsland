@@ -233,6 +233,20 @@ public partial class MainWindow
         double scale = Math.Max(_scale.Value, MinScale), size = Math.Max(_userScale.Value, MinScale);
         double dpi = VisualTreeHelper.GetDpi(this).DpiScaleY;
 
+        if (Settings.IslandAlign != IslandAlign.Center && _hwnd != IntPtr.Zero)
+        {
+            double screenW = SystemParameters.PrimaryScreenWidth;
+            double pillW = w * size;
+            double targetLeft = Settings.IslandAlign == IslandAlign.Left
+                ? (20 + Settings.PosX) + (pillW / 2) - (Width / 2)
+                : (screenW - 20 + Settings.PosX) - (pillW / 2) - (Width / 2);
+            if (Math.Abs(Left - targetLeft) > 0.5)
+            {
+                Left = targetLeft;
+                _glass?.Place();
+            }
+        }
+
         double radius = Settings.Radius < 100 ? (r * Settings.Radius / 100.0) : r;
         Pill.Width = w;
         Pill.Height = h;

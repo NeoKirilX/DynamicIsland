@@ -9,7 +9,7 @@ public enum Glyph
     Mute, Quiet, Mid, Loud, Headphones, Speaker, Vpn, Offline, Wifi, Wired, Bell, Note, Battery, Minus, Plus, Chevron, Back,
     Timer, Gear, Lines, Quote, Sparkle, Rim, Expand, Windows, Power, Look, Size, Gap, Drop, Moon, Tray, Cross, Bolt, VpnOff, Bars, Update,
     Segments, Stars, Pointer, Record, Folder, Bulge, Sun, Cloud, CloudSun, CloudMoon, Rain, Snow, Storm, Fog, Qr, Pin, Location, Search,
-    Check, PointerText, Parting, Cpu, Ram, Pulse, Clock,
+    Check, PointerText, Parting, Cpu, Ram, Pulse, Clock, Swap,
 }
 
 public sealed class Icon : FrameworkElement
@@ -295,6 +295,30 @@ public sealed class Icon : FrameworkElement
     static Geometry Outline(Glyph kind)
     {
         if (Outlines.TryGetValue(kind, out Geometry? outline)) return outline;
+        if (kind == Glyph.Cpu)
+        {
+            var g = Geometry.Parse("M6,6 H18 V18 H6 Z M9,2 V6 M15,2 V6 M9,18 V22 M15,18 V22 M2,9 H6 M2,15 H6 M18,9 H22 M18,15 H22 M9.5,9.5 H14.5 V14.5 H9.5 Z");
+            var stroke = new Pen(Brushes.White, 1.6) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+            outline = Placed(g.GetWidenedPathGeometry(stroke));
+            outline.Freeze();
+            return Outlines[kind] = outline;
+        }
+        if (kind == Glyph.Ram)
+        {
+            var g = Geometry.Parse("M3,7 H21 V17 H3 Z M6,17 V20 M10,17 V20 M14,17 V20 M18,17 V20 M6,10 H9 V13 H6 Z M11,10 H14 V13 H11 Z M16,10 H19 V13 H16 Z");
+            var stroke = new Pen(Brushes.White, 1.6) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+            outline = Placed(g.GetWidenedPathGeometry(stroke));
+            outline.Freeze();
+            return Outlines[kind] = outline;
+        }
+        if (kind == Glyph.Swap)
+        {
+            var g = Geometry.Parse("M16,4 L20,8 L16,12 M20,8 H8 C5.8,8 4,9.8 4,12 M8,20 L4,16 L8,12 M4,16 H16 C18.2,16 20,14.2 20,12");
+            var stroke = new Pen(Brushes.White, 1.6) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+            outline = Placed(g.GetWidenedPathGeometry(stroke));
+            outline.Freeze();
+            return Outlines[kind] = outline;
+        }
         outline = Composite.TryGetValue(kind, out var composite) ? Outline(composite.Pieces, composite.Mask) : Placed(Outline(Symbols[kind]));
         return Outlines[kind] = outline;
     }

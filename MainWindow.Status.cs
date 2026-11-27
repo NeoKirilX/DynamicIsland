@@ -179,12 +179,15 @@ public partial class MainWindow
         bool visible = Settings.SystemStats || _view == View.IdleBig;
         InfoCpuRow.SetVisible(visible);
         InfoRamRow.SetVisible(visible);
+        Native.TryGetMemory(out int ram, out double usedGb, out double totalGb, out double swapUsedGb, out double swapTotalGb);
+        bool hasSwap = swapTotalGb > 0.1;
+        InfoSwapRow.SetVisible(visible && hasSwap);
         if (!visible) return;
 
         int cpu = Native.GetCpuUsage();
-        Native.TryGetMemory(out int ram, out _, out _);
         InfoCpu.Text = cpu + "%";
-        InfoRam.Text = ram + "%";
+        InfoRam.Text = $"{usedGb:0.#}/{totalGb:0}G";
+        if (hasSwap) InfoSwap.Text = $"{swapUsedGb:0.#}/{swapTotalGb:0}G";
     }
 
     void ShowCharging(int percent)

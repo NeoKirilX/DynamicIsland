@@ -67,25 +67,45 @@ sealed class MediaService
     public Color[] Palette { get; private set; } = CoverPalette.Plain;
     public Color Accent => Palette[0];
     public bool IsPlaying { get; private set; }
-    public bool HasTrack => _session != null && !IsSpotifyAd(Source, RawTitle, _duration) && (RawTitle.Length > 0 || (_noTimeline && _barSearched && IsLive));
+    public bool HasTrack => _session != null && !IsAd(Source, RawTitle, _artist, _duration) && (RawTitle.Length > 0 || (_noTimeline && _barSearched && IsLive));
     public TimeSpan Duration => _duration;
     public bool HasBarPosition => _noTimeline && _barFound;
     public bool Seekable => _noTimeline ? _barFound : _duration.TotalSeconds >= 1;
 
     public void RaisePlayer() => SourceApp.BringToFront(Source, Title);
 
-    static bool IsSpotifyAd(string source, string title, TimeSpan duration)
+    static bool IsAd(string source, string title, string artist, TimeSpan duration)
     {
-        if (source.Contains("Spotify", StringComparison.OrdinalIgnoreCase))
+        bool isSpotify = source.Contains("Spotify", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(artist, "Spotify", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(title, "Spotify", StringComparison.OrdinalIgnoreCase);
+
+        double sec = duration.TotalSeconds;
+
+        if (isSpotify)
         {
+            if ((sec >= 28.5 && sec <= 31.5) || (sec >= 13.5 && sec <= 16.5)) return true;
             if (string.Equals(title, "Advertisement", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(title, "Spotify", StringComparison.OrdinalIgnoreCase) ||
-                (Math.Abs(duration.TotalSeconds - 30.0) < 0.8 && duration.TotalSeconds > 28.5) ||
-                (Math.Abs(duration.TotalSeconds - 15.0) < 0.8 && duration.TotalSeconds > 13.5))
+                string.Equals(artist, "Spotify", StringComparison.OrdinalIgnoreCase) ||
+                (string.IsNullOrWhiteSpace(artist) && sec >= 28.0 && sec <= 32.0))
             {
                 return true;
             }
         }
+
+        if (string.Equals(title, "Advertisement", StringComparison.OrdinalIgnoreCase) ||
+            title.StartsWith("Advertisement", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(artist, "Advertisement", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (Math.Abs(sec - 30.0) <= 0.6 && (isSpotify || string.IsNullOrWhiteSpace(artist) || string.IsNullOrWhiteSpace(title)))
+        {
+            return true;
+        }
+
         return false;
     }
 
@@ -118,9 +138,14 @@ sealed class MediaService
             var timeline = session.GetTimelineProperties();
             double seconds = (timeline.EndTime - timeline.StartTime).TotalSeconds;
             if (seconds > 0 && seconds < Settings.MinMusicDuration) return true;
-            if (session.SourceAppUserModelId.Contains("Spotify", StringComparison.OrdinalIgnoreCase))
+            bool isSpotify = session.SourceAppUserModelId.Contains("Spotify", StringComparison.OrdinalIgnoreCase);
+            if (isSpotify)
             {
-                if (Math.Abs(seconds - 30.0) < 0.8 || Math.Abs(seconds - 15.0) < 0.8) return true;
+                if ((seconds >= 28.5 && seconds <= 31.5) || (seconds >= 13.5 && seconds <= 16.5)) return true;
+            }
+            else if (Math.Abs(seconds - 30.0) <= 0.6)
+            {
+                return true;
             }
             return false;
         }
