@@ -319,7 +319,6 @@ public partial class MainWindow
             ComboCounterStyle.Progress => "1/4",
             _ => "х1",
         };
-        RimSwitch.Set(Settings.Rim, animate);
         ShadowSwitch.Set(Settings.Shadow, animate);
         SystemStatsSwitch.Set(Settings.SystemStats, animate);
         ClickLockSwitch.Set(Settings.ClickLock, animate);

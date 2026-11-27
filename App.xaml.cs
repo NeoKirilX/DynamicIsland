@@ -23,6 +23,15 @@ public partial class App : Application
         Updater.CleanUp();
 
         base.OnStartup(e);
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex) Log(ex);
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Log(args.Exception);
+            args.SetObserved();
+        };
         DispatcherUnhandledException += (_, args) =>
         {
             Log(args.Exception);

@@ -1060,13 +1060,6 @@
                                         </StackPanel>
                                     </Grid>
                                 </Button>
-                                <Button Style="{StaticResource RowButton}" Click="Rim_Click">
-                                    <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Rim"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Цветной ободок"/>
-                                        <local:Toggle x:Name="RimSwitch" Style="{StaticResource RowSwitch}"/>
-                                    </Grid>
-                                </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Shadow_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
