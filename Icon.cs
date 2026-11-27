@@ -10,6 +10,7 @@ public enum Glyph
     Timer, Gear, Lines, Quote, Sparkle, Rim, Expand, Windows, Power, Look, Size, Gap, Drop, Moon, Tray, Cross, Bolt, VpnOff, Bars, Update,
     Segments, Stars, Pointer, Record, Folder, Bulge, Sun, Cloud, CloudSun, CloudMoon, Rain, Snow, Storm, Fog, Qr, Pin, Location, Search,
     Check, PointerText, Parting, Cpu, Ram, Pulse, Clock, Swap,
+    ArrowLeftRight, ArrowUpDown, Reset, IslandShape,
 }
 
 public sealed class Icon : FrameworkElement
@@ -315,6 +316,38 @@ public sealed class Icon : FrameworkElement
         {
             var g = Geometry.Parse("M16,4 L20,8 L16,12 M20,8 H8 C5.8,8 4,9.8 4,12 M8,20 L4,16 L8,12 M4,16 H16 C18.2,16 20,14.2 20,12");
             var stroke = new Pen(Brushes.White, 1.6) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+            outline = Placed(g.GetWidenedPathGeometry(stroke));
+            outline.Freeze();
+            return Outlines[kind] = outline;
+        }
+        if (kind == Glyph.ArrowLeftRight)
+        {
+            var g = Geometry.Parse("M4,12 H20 M8,8 L4,12 L8,16 M16,8 L20,12 L16,16");
+            var stroke = new Pen(Brushes.White, 1.8) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+            outline = Placed(g.GetWidenedPathGeometry(stroke));
+            outline.Freeze();
+            return Outlines[kind] = outline;
+        }
+        if (kind == Glyph.ArrowUpDown)
+        {
+            var g = Geometry.Parse("M12,4 V20 M8,8 L12,4 L16,8 M8,16 L12,20 L16,16");
+            var stroke = new Pen(Brushes.White, 1.8) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+            outline = Placed(g.GetWidenedPathGeometry(stroke));
+            outline.Freeze();
+            return Outlines[kind] = outline;
+        }
+        if (kind == Glyph.Reset)
+        {
+            var g = Geometry.Parse("M5,11 A7,7 0 1,1 12,19 A7,7 0 0,1 6.5,15.5 M5,5 V11 H11");
+            var stroke = new Pen(Brushes.White, 1.8) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+            outline = Placed(g.GetWidenedPathGeometry(stroke));
+            outline.Freeze();
+            return Outlines[kind] = outline;
+        }
+        if (kind == Glyph.IslandShape)
+        {
+            var g = Geometry.Parse("M7,8 H17 C19.8,8 22,10.2 22,13 C22,15.8 19.8,18 17,18 H7 C4.2,18 2,15.8 2,13 C2,10.2 4.2,8 7,8 Z");
+            var stroke = new Pen(Brushes.White, 1.8) { LineJoin = PenLineJoin.Round };
             outline = Placed(g.GetWidenedPathGeometry(stroke));
             outline.Freeze();
             return Outlines[kind] = outline;

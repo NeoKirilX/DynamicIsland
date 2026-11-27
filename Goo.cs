@@ -35,6 +35,7 @@ public sealed class Goo : FrameworkElement
     Rect _pill = Rect.Empty, _bubble = Rect.Empty;
     double _radius;
     bool _glass;
+    bool _lastNotch = Settings.Notch;
     Color[]? _palette;
     Point? _pointer;
     Geometry? _innerGeometry, _outerGeometry, _bevelRingGeometry;
@@ -102,9 +103,12 @@ public sealed class Goo : FrameworkElement
         _flash.Mist.BeginAnimation(Brush.OpacityProperty, null);
     }
 
+    public void InvalidateNotch() => _lastNotch = !Settings.Notch;
+
     public void SetShape(Rect pill, double radius, Rect bubble)
     {
-        if (pill == _pill && radius == _radius && bubble == _bubble) return;
+        if (pill == _pill && radius == _radius && bubble == _bubble && Settings.Notch == _lastNotch) return;
+        _lastNotch = Settings.Notch;
         _pill = pill;
         _radius = radius;
         _bubble = bubble;

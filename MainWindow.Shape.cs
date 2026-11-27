@@ -47,6 +47,7 @@ public partial class MainWindow
     readonly Spring[] _springs;
     Rect _clipRect = Rect.Empty;
     double _clipRadius;
+    bool _lastNotch = Settings.Notch;
     bool _morphing, _pullHandleActive, _pullHandleWasReady, _pullHandleOpened;
 
     void UpdateTargets()
@@ -277,17 +278,18 @@ public partial class MainWindow
         PlaceGestureHints(pill);
 
         Geometry? outer = Body.OuterGeometry;
-        if (pill != _clipRect || r != _clipRadius || !ReferenceEquals(Shadow.Data, outer))
+        if (pill != _clipRect || r != _clipRadius || Settings.Notch != _lastNotch || !ReferenceEquals(Shadow.Data, outer))
         {
             _clipRect = pill;
             _clipRadius = r;
+            _lastNotch = Settings.Notch;
             Geometry pillOutline = Settings.Notch ? Squircle.Notch(pill, r) : Squircle.Of(pill, r);
             (Rect inside, double insideRadius) = Body.PillInside;
             Geometry insideClip = inside.IsEmpty ? pillOutline : (Settings.Notch ? Squircle.Notch(inside, insideRadius) : Squircle.Of(inside, insideRadius));
             Host.Clip = Shared.Clip = pillOutline;
             Backdrops.Clip = GestureHints.Clip = insideClip;
             Shadow.Data = outer ?? pillOutline;
-            Shadow.Clip = _glass.IsOn ? Around(Shadow.Data) : null;
+            Shadow.Clip = _glass.IsOn && Shadow.Data != null ? Around(Shadow.Data) : null;
         }
         CutGlass(dpi);
     }
@@ -314,7 +316,7 @@ public partial class MainWindow
         LeanRightIcon.Fill = leanReady && _leanDrag < 0 ? _accentBrush : Brushes.White;
 
         double handleAlpha = Math.Clamp(_pullHandleAlpha.Value, 0, 1);
-        bool showHandle = handleAlpha > PullHandleVisibleEpsilon;
+        bool showHandle = pill.Height < CompactMaxHeight && _grab == Grab.Pull && handleAlpha > PullHandleVisibleEpsilon;
         PullHandle.SetVisible(showHandle);
         if (showHandle)
         {

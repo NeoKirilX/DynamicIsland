@@ -626,8 +626,74 @@ public partial class MainWindow
 
     void Notch_Click(object sender, RoutedEventArgs e)
     {
+        bool wasNotch = Settings.Notch;
         Settings.Notch = NotchSegments.PickUnderPointer() == 1;
+        if (Settings.Notch != wasNotch)
+        {
+            SyncNotchRows(animate: true);
+        }
         ApplyLook();
+    }
+
+    void SyncNotchRows(bool animate)
+    {
+        bool notch = Settings.Notch;
+        if (!animate)
+        {
+            GapRow.Visibility = notch ? Visibility.Collapsed : Visibility.Visible;
+            GapRow.Height = notch ? 0 : 40;
+            GapRow.Opacity = notch ? 0 : 1;
+            GapRowMove.X = notch ? -60 : 0;
+
+            PosYRow.Visibility = notch ? Visibility.Collapsed : Visibility.Visible;
+            PosYRow.Height = notch ? 0 : 40;
+            PosYRow.Opacity = notch ? 0 : 1;
+            PosYRowMove.X = notch ? -60 : 0;
+            return;
+        }
+
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        Duration duration = Ms(260);
+
+        if (notch)
+        {
+            var slideX = new DoubleAnimation(0, -60, duration) { EasingFunction = ease };
+            var fadeOut = new DoubleAnimation(1, 0, Ms(200)) { EasingFunction = ease };
+            var shrinkH = new DoubleAnimation(40, 0, duration) { EasingFunction = ease };
+            shrinkH.Completed += (_, _) =>
+            {
+                if (Settings.Notch)
+                {
+                    GapRow.Visibility = Visibility.Collapsed;
+                    PosYRow.Visibility = Visibility.Collapsed;
+                }
+            };
+
+            GapRowMove.BeginAnimation(TranslateTransform.XProperty, slideX);
+            GapRow.BeginAnimation(OpacityProperty, fadeOut);
+            GapRow.BeginAnimation(HeightProperty, shrinkH);
+
+            PosYRowMove.BeginAnimation(TranslateTransform.XProperty, slideX);
+            PosYRow.BeginAnimation(OpacityProperty, fadeOut);
+            PosYRow.BeginAnimation(HeightProperty, shrinkH);
+        }
+        else
+        {
+            GapRow.Visibility = Visibility.Visible;
+            PosYRow.Visibility = Visibility.Visible;
+
+            var slideX = new DoubleAnimation(-60, 0, duration) { EasingFunction = ease };
+            var fadeIn = new DoubleAnimation(0, 1, duration) { EasingFunction = ease };
+            var expandH = new DoubleAnimation(0, 40, duration) { EasingFunction = ease };
+
+            GapRowMove.BeginAnimation(TranslateTransform.XProperty, slideX);
+            GapRow.BeginAnimation(OpacityProperty, fadeIn);
+            GapRow.BeginAnimation(HeightProperty, expandH);
+
+            PosYRowMove.BeginAnimation(TranslateTransform.XProperty, slideX);
+            PosYRow.BeginAnimation(OpacityProperty, fadeIn);
+            PosYRow.BeginAnimation(HeightProperty, expandH);
+        }
     }
 
     int _baselinePosX = Settings.PosX;
@@ -835,15 +901,19 @@ public partial class MainWindow
             dot.IsChecked = true;
             AccentText.Text = (string)dot.Tag;
         }
+        SyncNotchRows(animate: false);
     }
 
     void ApplyLook()
     {
         RefreshLookPage();
         _userScale.Target = Settings.Scale / 100.0;
-        _topGap.Target = Settings.Gap;
+        _topGap.Target = Settings.Notch ? 0 : Settings.Gap;
         RepositionWindow();
         UpdateTargets();
+        _clipRect = Rect.Empty;
+        Body.InvalidateNotch();
+        StartShapeLoop();
     }
 
     void OpenLanguageModal()

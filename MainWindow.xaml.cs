@@ -561,6 +561,10 @@ public partial class MainWindow : Window
         base.OnKeyDown(e);
         if (_view == View.Look || _panel == Panel.Look)
         {
+            if (e.Key is Key.LeftShift or Key.RightShift)
+            {
+                RefreshLookPage();
+            }
             bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0 || Native.IsShiftDown;
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
             int step = ctrl ? 50 : shift ? 1 : 10;
@@ -570,6 +574,18 @@ public partial class MainWindow : Window
                 case Key.Right: Settings.PosX += step; ApplyLook(); CheckCoordinateSafety(); e.Handled = true; break;
                 case Key.Up: Settings.PosY -= step; ApplyLook(); CheckCoordinateSafety(); e.Handled = true; break;
                 case Key.Down: Settings.PosY += step; ApplyLook(); CheckCoordinateSafety(); e.Handled = true; break;
+            }
+        }
+    }
+
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+        base.OnKeyUp(e);
+        if (_view == View.Look || _panel == Panel.Look)
+        {
+            if (e.Key is Key.LeftShift or Key.RightShift)
+            {
+                RefreshLookPage();
             }
         }
     }

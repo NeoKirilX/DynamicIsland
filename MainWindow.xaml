@@ -36,7 +36,7 @@
                             <Grid.RenderTransform>
                                 <ScaleTransform x:Name="Squish"/>
                             </Grid.RenderTransform>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsPressed" Value="True">
@@ -165,7 +165,7 @@
                             <Border CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="{TemplateBinding Background}"/>
                             <Border x:Name="Shine" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="White" Opacity="0"/>
                             <Border x:Name="Press" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="White" Opacity="0"/>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -213,7 +213,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="Transparent">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -311,7 +311,7 @@
                             <Border x:Name="Lit" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="{StaticResource Green}" Opacity="0"/>
                             <Border x:Name="Shine" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="White" Opacity="0"/>
                             <Border x:Name="Press" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="White" Opacity="0"/>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
@@ -859,27 +859,30 @@
 
                 <Grid x:Name="TimerSetView" Width="320" Height="220" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <StackPanel Margin="14,12,14,0">
-                        <Grid Margin="6,0,6,4">
+                        <Grid Margin="6,0,6,6">
                             <TextBlock Style="{StaticResource Caption}" Text="ТАЙМЕР" VerticalAlignment="Center"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button x:Name="TimerIntervalBtn" Style="{StaticResource ChipButton}" Height="22" Padding="6,0" Margin="0,0,6,0" Click="TimerInterval_Click">
-                                    <TextBlock x:Name="TimerIntervalText" Text="Повтор: Выкл" FontSize="11" Foreground="{StaticResource Dim}"/>
+                                <Button x:Name="TimerIntervalBtn" Style="{StaticResource ChipButton}" Height="24" Padding="10,0" Margin="0,0,6,0" Click="TimerInterval_Click">
+                                    <TextBlock x:Name="TimerIntervalText" Text="Повтор: Выкл" FontSize="11" FontWeight="Medium" Foreground="{StaticResource Dim}"/>
                                 </Button>
-                                <Button x:Name="TimerOvertimeBtn" Style="{StaticResource ChipButton}" Height="22" Padding="6,0" Click="TimerOvertime_Click">
-                                    <TextBlock x:Name="TimerOvertimeText" Text="Овертайм" FontSize="11" Foreground="{StaticResource Dim}"/>
+                                <Button x:Name="TimerOvertimeBtn" Style="{StaticResource ChipButton}" Height="24" Padding="10,0" Margin="0" Click="TimerOvertime_Click">
+                                    <TextBlock x:Name="TimerOvertimeText" Text="Овертайм: Выкл" FontSize="11" FontWeight="Medium" Foreground="{StaticResource Dim}"/>
                                 </Button>
                             </StackPanel>
                         </Grid>
-                        <local:Puddle Height="56">
+                        <local:Puddle Height="64">
                             <Button Style="{StaticResource IconButton}" HorizontalAlignment="Left" Click="TimerLess_Click">
                                 <Grid Width="36" Height="36">
                                     <Ellipse Fill="#1AFFFFFF"/>
                                     <local:Icon Kind="Minus" Width="15" Height="15"/>
                                 </Grid>
                             </Button>
-                            <local:Digits x:Name="SetupText" Text="25:00" FontSize="38" FontWeight="SemiBold"
-                                          FontFamily="{StaticResource Display}"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <local:Digits x:Name="SetupText" Text="25:00" FontSize="38" FontWeight="SemiBold"
+                                              FontFamily="{StaticResource Display}" HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="SetupDurationText" Text="25 мин" FontSize="11" FontWeight="Medium"
+                                           Foreground="{StaticResource Orange}" HorizontalAlignment="Center" Margin="0,-2,0,0" Visibility="Collapsed"/>
+                            </StackPanel>
                             <Button Style="{StaticResource IconButton}" HorizontalAlignment="Right" Click="TimerMore_Click">
                                 <Grid Width="36" Height="36">
                                     <Ellipse Fill="#1AFFFFFF"/>
@@ -1388,7 +1391,10 @@
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
-                                <Button x:Name="GapRow" Style="{StaticResource RowButton}">
+                                <Button x:Name="GapRow" Style="{StaticResource RowButton}" ClipToBounds="True">
+                                    <Button.RenderTransform>
+                                        <TranslateTransform x:Name="GapRowMove"/>
+                                    </Button.RenderTransform>
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Gap"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Отступ от края"/>
@@ -1410,33 +1416,36 @@
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Notch_Click">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Look"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="IslandShape"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Форма островка"/>
                                         <local:Segments x:Name="NotchSegments" Style="{StaticResource RowSegments}" Labels="Пилюля|Чёлка"/>
                                     </Grid>
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Align_Click">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Location"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Выравнивание"/>
                                         <local:Segments x:Name="AlignSegments" Style="{StaticResource RowSegments}" Labels="Центр|Слева|Справа"/>
                                     </Grid>
                                 </Button>
                                 <Button x:Name="PosXRow" Style="{StaticResource RowButton}">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Pointer"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="ArrowLeftRight"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Позиция X"/>
-                                        <local:Scrubber x:Name="PosXSlider" Style="{StaticResource RowSlider}"
+                                        <local:Scrubber x:Name="PosXSlider" Style="{StaticResource RowSlider}" Width="92" Margin="0,0,84,0"
                                                         Minimum="-1920" Maximum="1920" Step="10" Changed="PosXSlider_Changed"/>
                                         <local:Digits x:Name="PosXText" Foreground="{StaticResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
-                                <Button x:Name="PosYRow" Style="{StaticResource RowButton}">
+                                <Button x:Name="PosYRow" Style="{StaticResource RowButton}" ClipToBounds="True">
+                                    <Button.RenderTransform>
+                                        <TranslateTransform x:Name="PosYRowMove"/>
+                                    </Button.RenderTransform>
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Gap"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="ArrowUpDown"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Позиция Y"/>
-                                        <local:Scrubber x:Name="PosYSlider" Style="{StaticResource RowSlider}"
+                                        <local:Scrubber x:Name="PosYSlider" Style="{StaticResource RowSlider}" Width="92" Margin="0,0,84,0"
                                                         Minimum="0" Maximum="1200" Step="5" Changed="PosYSlider_Changed"/>
                                         <local:Digits x:Name="PosYText" Foreground="{StaticResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -1444,7 +1453,7 @@
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="ResetPos_Click">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Back"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Reset"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Сбросить смещение (0, 0)"/>
                                     </Grid>
                                 </Button>
@@ -1463,7 +1472,7 @@
                                 </Grid>
                                 <Button Style="{StaticResource RowButton}" Click="InvertGesture_Click">
                                     <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Chevron"/>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Swap"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Инвертировать жест трека"/>
                                         <local:Toggle x:Name="InvertGestureSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>

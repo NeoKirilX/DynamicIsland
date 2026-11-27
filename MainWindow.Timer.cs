@@ -55,8 +55,16 @@ public partial class MainWindow
         SetUrgent(false);
     }
 
-    static string DescribeDuration(TimeSpan t) =>
-        t.TotalSeconds >= 60 ? (int)Math.Round(t.TotalMinutes) + " мин" : (int)t.TotalSeconds + " с";
+    static string DescribeDuration(TimeSpan t)
+    {
+        if (t.TotalHours >= 1)
+        {
+            int h = (int)t.TotalHours;
+            int m = t.Minutes;
+            return m > 0 ? $"{h} ч {m} мин" : $"{h} ч";
+        }
+        return t.TotalSeconds >= 60 ? (int)Math.Round(t.TotalMinutes) + " мин" : (int)t.TotalSeconds + " с";
+    }
 
     void SyncTimer()
     {
@@ -168,7 +176,22 @@ public partial class MainWindow
     void SetMinutes(int minutes)
     {
         _setupMinutes = Math.Clamp(minutes, 1, MaxMinutes);
-        SetupText.Text = _setupMinutes + ":00";
+        if (_setupMinutes >= 60)
+        {
+            int h = _setupMinutes / 60;
+            int m = _setupMinutes % 60;
+            SetupText.Text = $"{h}:{m:02d}:00";
+            SetupText.FontSize = 32;
+            SetupDurationText.Text = m > 0 ? $"{h} ч {m} мин" : $"{h} ч";
+            SetupDurationText.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            SetupText.Text = _setupMinutes + ":00";
+            SetupText.FontSize = 38;
+            SetupDurationText.Text = $"{_setupMinutes} мин";
+            SetupDurationText.Visibility = Visibility.Collapsed;
+        }
         SyncTimerPresets();
     }
 
