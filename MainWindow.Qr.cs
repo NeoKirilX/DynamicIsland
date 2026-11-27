@@ -25,6 +25,12 @@ public partial class MainWindow
     void QrGenerate_Click(object sender, RoutedEventArgs e)
     {
         var (success, msg, file) = QrService.GenerateAndSave();
+        if (success && !string.IsNullOrEmpty(file))
+        {
+            _shelf.Add([file]);
+            SyncShelf();
+            UpdateTargets();
+        }
         ShowPanel(Panel.None);
         Notify(Glyph.Qr, Brushes.White, "QR-код", success ? "Создан и скопирован в буфер" : msg);
     }
